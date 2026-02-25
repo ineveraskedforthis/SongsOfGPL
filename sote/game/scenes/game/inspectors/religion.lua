@@ -98,9 +98,14 @@ function religion.draw(gam, rect)
 
     -- En religion.draw()
     local spirit_name = "Ninguno"
-    spirit_name = spirit_module.get_name(faith.spirit)
-    spirit_domain = spirit_module.get_domain(faith.spirit)
-    spirit_rank = spirit_module.get_rank(faith.spirit)
+    local spirit_domain = "Desconocido"
+    local spirit_rank = "N/A"
+
+    if faith.spirit ~= nil then
+        spirit_name = spirit_module.get_name(faith.spirit)
+        spirit_domain = spirit_module.get_domain(faith.spirit)
+        spirit_rank = spirit_module.get_rank(faith.spirit)
+    end
 
     -- Mostrar en UI
     local spirit_panel_1 = layout:next(content.width, unit)
