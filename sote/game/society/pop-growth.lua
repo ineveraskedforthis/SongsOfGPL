@@ -85,7 +85,7 @@ function pg.add_remove(to_add,to_remove)
 
 		local race = DATA.pop_get_race(pp)
 		local faith = DATA.pop_get_faith(pp)
-		local rite = pop_utils.get_rite(pp)
+		local rite = DATA.pop_get_rite(pp)
 		local culture = DATA.pop_get_culture(pp)
 		local fat_race = DATA.fatten_race(race)
 

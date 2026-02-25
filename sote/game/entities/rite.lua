@@ -12,13 +12,12 @@ local rite = {
 function rite.create_rite()
     local new_id = rite.last_id + 1
     rite.last_id = new_id
-    
-    -- Initialize the rite data structure
+
     rite.data[new_id] = {
         id = new_id,
         name = "",
-        faith = nil,
-        spirits = {}  -- list of spirit_id
+        faiths = {},
+        spirits = {}
     }
 
     return { id = new_id }
@@ -41,16 +40,52 @@ function rite.set_name(rite_id, name)
     rite.data[rite_id.id].name = name
 end
 
+---@param faiths faith_id|faith_id[]
+---@return faith_id[]
+local function normalize_faiths(faiths)
+    if faiths == nil then
+        return {}
+    end
+
+    if type(faiths) ~= "table" then
+        return { faiths }
+    end
+
+    if faiths.id ~= nil then
+        return { faiths }
+    end
+
+    return faiths
+end
+
 ---@param rite_id rite_id
----@return faith_id
-function rite.get_faith(rite_id)
-    return rite.data[rite_id.id].faith
+---@return faith_id[]
+function rite.get_faiths(rite_id)
+    return rite.data[rite_id.id].faiths
+end
+
+---@param rite_id rite_id
+---@param faiths faith_id|faith_id[]
+function rite.set_faiths(rite_id, faiths)
+    rite.data[rite_id.id].faiths = normalize_faiths(faiths)
 end
 
 ---@param rite_id rite_id
 ---@param faith faith_id
-function rite.set_faith(rite_id, faith)
-    rite.data[rite_id.id].faith = faith
+function rite.add_faith(rite_id, faith)
+    table.insert(rite.data[rite_id.id].faiths, faith)
+end
+
+---@param rite_id rite_id
+---@param faith faith_id
+function rite.remove_faith(rite_id, faith)
+    local list = rite.data[rite_id.id].faiths
+    for i, f in ipairs(list) do
+        if f == faith then
+            table.remove(list, i)
+            return
+        end
+    end
 end
 
 ---@param rite_id rite_id
