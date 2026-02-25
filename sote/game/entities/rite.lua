@@ -47,7 +47,11 @@ local function normalize_faiths(faiths)
         return {}
     end
 
-    if type(faiths) == "table" and faiths.id ~= nil then
+    if type(faiths) ~= "table" then
+        return { faiths }
+    end
+
+    if faiths.id ~= nil then
         return { faiths }
     end
 
