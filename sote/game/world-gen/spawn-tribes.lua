@@ -266,7 +266,7 @@ function st.run()
 
 			local rg = rel.Religion:new(culture)
 			local faith = rel.Faith:new(rg, culture)
-			local rite = rel.Faith:new(faith, culture)
+			local rite = rel.Rite:new(faith, culture)
 			DATA.faith_set_burial_rites(faith, tabb.select_one(love.math.random(), {
 				{
 					weight = 1,
@@ -296,6 +296,10 @@ function st.run()
 		local culture = DATA.realm_get_primary_culture(realm)
 		local race = DATA.realm_get_primary_race(realm)
 		local faith = DATA.realm_get_primary_faith(realm)
+		local rite = DATA.faith_get_rite(faith)
+		if rite == nil then
+			rite = rel.Rite:new(faith, culture)
+		end
 
 		if provinces_per_cultures[culture] == nil then
 			provinces_per_cultures[culture] = {}

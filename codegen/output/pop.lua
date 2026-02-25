@@ -12,6 +12,7 @@ local ffi = require("ffi")
 ---@field unique_id number 
 ---@field race race_id 
 ---@field faith faith_id 
+---@field rite rite_id
 ---@field culture culture_id 
 ---@field birth_year number 
 ---@field birth_tick number 
@@ -37,6 +38,7 @@ local ffi = require("ffi")
 ---@field unique_id number 
 ---@field race race_id 
 ---@field faith faith_id 
+---@field rite rite_id
 ---@field culture culture_id 
 ---@field birth_year number 
 ---@field birth_tick number 
@@ -135,6 +137,8 @@ uint32_t dcon_pop_size();
 DATA.pop_name= {}
 ---@type (AI_DATA)[]
 DATA.pop_ai_data= {}
+---@type (rite_id)[]
+DATA.pop_rite= {}
 
 ---pop: LUA bindings---
 
@@ -213,6 +217,16 @@ end
 ---@param value faith_id valid faith_id
 function DATA.pop_set_faith(pop_id, value)
     DCON.dcon_pop_set_faith(pop_id - 1, value - 1)
+end
+---@param pop_id pop_id valid pop id
+---@return rite_id rite
+function DATA.pop_get_rite(pop_id)
+    return DATA.pop_rite[pop_id]
+end
+---@param pop_id pop_id valid pop id
+---@param value rite_id valid rite_id
+function DATA.pop_set_rite(pop_id, value)
+    DATA.pop_rite[pop_id] = value
 end
 ---@param pop_id pop_id valid pop id
 ---@return culture_id culture 
@@ -655,6 +669,7 @@ local fat_pop_id_metatable = {
         if (k == "unique_id") then return DATA.pop_get_unique_id(t.id) end
         if (k == "race") then return DATA.pop_get_race(t.id) end
         if (k == "faith") then return DATA.pop_get_faith(t.id) end
+        if (k == "rite") then return DATA.pop_get_rite(t.id) end
         if (k == "culture") then return DATA.pop_get_culture(t.id) end
         if (k == "birth_year") then return DATA.pop_get_birth_year(t.id) end
         if (k == "birth_tick") then return DATA.pop_get_birth_tick(t.id) end
@@ -688,6 +703,10 @@ local fat_pop_id_metatable = {
         end
         if (k == "faith") then
             DATA.pop_set_faith(t.id, v)
+            return
+        end
+        if (k == "rite") then
+            DATA.pop_set_rite(t.id, v)
             return
         end
         if (k == "culture") then

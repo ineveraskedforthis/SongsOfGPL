@@ -43,6 +43,8 @@ DATA.faith_burial_rites= {}
 
 ---@type (religion_id)[]  -- Línea añadida
 DATA.faith_religion = {}  -- Almacena el religion_id de cada faith
+---@type (rite_id)[]
+DATA.faith_rite = {}
 ---faith: FFI arrays---
 ---@type (string)[]
 DATA.faith_name = {}
@@ -177,6 +179,18 @@ function DATA.faith_set_religion(faith_id, value)
     DATA.faith_religion[faith_id] = value
 end
 
+---@param faith_id faith_id valid faith id
+---@return rite_id rite
+function DATA.faith_get_rite(faith_id)
+    return DATA.faith_rite[faith_id]
+end
+
+---@param faith_id faith_id valid faith id
+---@param value rite_id valid rite_id
+function DATA.faith_set_rite(faith_id, value)
+    DATA.faith_rite[faith_id] = value
+end
+
 -- Funciones para los nuevos ritos
 function DATA.faith_get_birth_rites(faith_id)
     return DATA.faith_birth_rites[faith_id]
@@ -221,6 +235,7 @@ local fat_faith_id_metatable = {
         if (k == "b") then return DATA.faith_get_b(t.id) end
         if (k == "burial_rites") then return DATA.faith_get_burial_rites(t.id) end
         if (k == "religion") then return DATA.faith_get_religion(t.id) end
+        if (k == "rite") then return DATA.faith_get_rite(t.id) end
         if (k == "birth_rites") then return DATA.faith_get_birth_rites(t.id) end
         if (k == "passage_rites") then return DATA.faith_get_passage_rites(t.id) end
         if (k == "disease_rites") then return DATA.faith_get_disease_rites(t.id) end
@@ -252,6 +267,10 @@ local fat_faith_id_metatable = {
         end
         if (k == "religion") then
             DATA.faith_set_religion(t.id, v)
+            return
+        end
+        if (k == "rite") then
+            DATA.faith_set_rite(t.id, v)
             return
         end
         if (k == "birth_rites") then

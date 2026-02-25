@@ -76,15 +76,19 @@ local rite_module   = require "game.entities.rite"
 cl.Rite = {}
 cl.Rite.__index = cl.Rite
 
----@param faith faith_id
+---@param faiths faith_id|faith_id[]
 ---@param culture culture_id
 ---@return rite_id
-function cl.Rite:new(faith, culture)
+function cl.Rite:new(faiths, culture)
     -- 1) Creas el rito de bajo nivel
     local rite = rite_module.create_rite()
 
     -- 2) Lo vinculas a la fe y le pones un nombre
-    rite_module.set_faith(rite, faith)
+    rite_module.set_faiths(rite, faiths)
+
+    for _, faith in ipairs(rite_module.get_faiths(rite)) do
+        DATA.faith_set_rite(faith, rite)
+    end
     rite_module.set_name(rite,
         language_utils.get_random_rite_name(
             DATA.culture_get_language(culture)

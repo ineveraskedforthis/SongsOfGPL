@@ -30,6 +30,9 @@ end
 ---@param spirit_id spirit_id
 ---@return string
 function spirit.get_name(spirit_id)
+    if spirit_id == nil or spirit_id.id == nil or spirit.data[spirit_id.id] == nil then
+        return "Ninguno"
+    end
     return spirit.data[spirit_id.id].name
 end
 
@@ -42,6 +45,9 @@ end
 ---@param spirit_id spirit_id
 ---@return string
 function spirit.get_domain(spirit_id)
+    if spirit_id == nil or spirit_id.id == nil or spirit.data[spirit_id.id] == nil then
+        return "Desconocido"
+    end
     return spirit.data[spirit_id.id].domain
 end
 
@@ -52,8 +58,11 @@ function spirit.set_domain(spirit_id, domain)
 end
 
 ---@param spirit_id spirit_id
----@return number
+---@return number|string
 function spirit.get_rank(spirit_id)
+    if spirit_id == nil or spirit_id.id == nil or spirit.data[spirit_id.id] == nil then
+        return "N/A"
+    end
     return spirit.data[spirit_id.id].rank
 end
 
