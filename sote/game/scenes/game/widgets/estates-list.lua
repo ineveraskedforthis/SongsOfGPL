@@ -47,27 +47,16 @@ return function(game, rect, table, state, title, compact)
         ---@type TableColumn<estate_id>[]
         local columns = {
             {
-                header = "location",
+                header = ".",
                 render_closure = function(rect, k, v)
-                    local province_id = ESTATE_PROVINCE(v)
-                    ib.text_button_to_province_tile(game,DATA.province_get_center(province_id),rect,strings.title(DATA.building_type_get_name(DATA.building_get_current_type(v)))
-                        .. " is in the province of " .. PROVINCE_NAME(province_id) .. ".")
-                end,
-                width = 4,
-                value = function(k, v)
-                    return PROVINCE_NAME(ESTATE_PROVINCE(v))
-                end,
-            },
-            {
-                header = "rlm",
-                render_closure = function(rect, k, v)
-                    local realm_id = PROVINCE_REALM(ESTATE_PROVINCE(v))
-                    ib.icon_button_to_realm(game,realm_id,rect,strings.title(DATA.building_type_get_name(DATA.building_get_current_type(v)))
-                        .. " is in the capitol of " .. REALM_NAME(realm_id) .. ".")
+                    local owner = OWNER(v)
+                    ib.icon_button_to_estate(game,v,INVALID_ID,rect, owner == INVALID_ID and ("Public estate in " .. PROVINCE_NAME(ESTATE_PROVINCE(v)))
+                        or ("Estate of " .. NAME(owner) .. "."))
+
                 end,
                 width = 1,
                 value = function(k, v)
-                    return PROVINCE_REALM(ESTATE_PROVINCE(v))
+                    return DATA.estate_get_balance_last_tick(v)
                 end,
             },
             {
@@ -104,6 +93,30 @@ return function(game, rect, table, state, title, compact)
                 width = 3,
                 value = function(k, v)
                     return DATA.estate_get_savings(v)
+                end,
+            },
+            {
+                header = "location",
+                render_closure = function(rect, k, v)
+                    local province_id = ESTATE_PROVINCE(v)
+                    ib.text_button_to_province_tile(game,DATA.province_get_center(province_id),rect,
+                        "Estate in is in the province of " .. PROVINCE_NAME(province_id) .. ".")
+                end,
+                width = 4,
+                value = function(k, v)
+                    return PROVINCE_NAME(ESTATE_PROVINCE(v))
+                end,
+            },
+            {
+                header = "rlm",
+                render_closure = function(rect, k, v)
+                    local realm_id = PROVINCE_REALM(ESTATE_PROVINCE(v))
+                    ib.icon_button_to_realm(game,realm_id,rect,
+                        "Estate in is in the realm of " .. REALM_NAME(realm_id) .. ".")
+                end,
+                width = 1,
+                value = function(k, v)
+                    return PROVINCE_REALM(ESTATE_PROVINCE(v))
                 end,
             },
         }

@@ -28,10 +28,10 @@ function text.exploration_progress(self, character, associated_data)
 		.. PROVINCE_NAME(associated_data.explored_province)
 		.. "."
 		.. " I estimate that exploration will take roughly "
-		.. tostring(math.floor(associated_data._exploration_days_left / warband_utils.size(LEADER_OF_WARBAND(character))))
+		.. tostring(math.floor(associated_data._exploration_days_left / warband_utils.size(LEADER_OF_ESTATE(character))))
 		.. " days."
 		.. " We have enough supplies for "
-		.. ut.to_fixed_point2(economy_values.days_of_travel(LEADER_OF_WARBAND(character)))
+		.. ut.to_fixed_point2(economy_values.days_of_travel(LEADER_OF_ESTATE(character)))
 		.. " days of exploration"
 end
 

@@ -36,7 +36,7 @@ local function load()
 	event_utils.notification_event(
 		"request-tribute-army-returns-success-notification",
 		function(self, character, associated_data)
-			return "We succeeded in enforcing tribute on " .. REALM_NAME(PROVINCE_REALM(TILE_PROVINCE(WARBAND_TILE(LEADER_OF_WARBAND(character)))))
+			return "We succeeded in enforcing tribute on " .. REALM_NAME(PROVINCE_REALM(TILE_PROVINCE(ESTATE_TILE(LEADER_OF_ESTATE(character)))))
 		end,
 		function(root, associated_data)
 			return "Great!"
@@ -49,7 +49,7 @@ local function load()
 	event_utils.notification_event(
 		"request-tribute-army-returns-fail-notification",
 		function(self, character, associated_data)
-			return "We failed to enforce tribute on " .. REALM_NAME(PROVINCE_REALM(TILE_PROVINCE(WARBAND_TILE(LEADER_OF_WARBAND(character)))))
+			return "We failed to enforce tribute on " .. REALM_NAME(PROVINCE_REALM(TILE_PROVINCE(ESTATE_TILE(LEADER_OF_ESTATE(character)))))
 		end,
 		function(root, associated_data)
 			return "Whatever. We will succeed next time"
@@ -75,7 +75,7 @@ local function load()
 
 			if WORLD:does_player_see_realm_news(realm) then
 				WORLD:emit_notification("Raid attempt of " .. NAME(raider) .. " in " ..
-					PROVINCE_NAME(TILE_PROVINCE(WARBAND_TILE(LEADER_OF_WARBAND(raider)))) .. " failed. " .. tostring(losses) .. " warriors died. People are upset.")
+					PROVINCE_NAME(TILE_PROVINCE(ESTATE_TILE(LEADER_OF_ESTATE(raider)))) .. " failed. " .. tostring(losses) .. " warriors died. People are upset.")
 			end
 		end,
 	}
@@ -94,7 +94,7 @@ local function load()
 			local loot = associated_data.loot
 			local losses = associated_data.losses
 			local raider = associated_data.raider
-			local target = TILE_PROVINCE(WARBAND_TILE(LEADER_OF_WARBAND(raider)))
+			local target = TILE_PROVINCE(ESTATE_TILE(LEADER_OF_ESTATE(raider)))
 
 			if loot ~= loot then
 				error("NAN TREASURY FROM RAID SUCCESS"
@@ -121,7 +121,7 @@ local function load()
 				ECONOMY_REASON.QUEST
 			)
 
-			local w = LEADER_OF_WARBAND(raider)
+			local w = LEADER_OF_ESTATE(raider)
 
 			-- half of loot goes to warbands
 			DATA.warband_inc_treasury(w, loot * 0.5)
@@ -162,7 +162,7 @@ local function load()
 
 			if WORLD:does_player_see_realm_news(realm) then
 				WORLD:emit_notification("Our raid attempt in " ..
-					PROVINCE_NAME(TILE_PROVINCE(WARBAND_TILE(LEADER_OF_WARBAND(associated_data.raider)))) .. " failed. We were spotted but our warriors are safe")
+					PROVINCE_NAME(TILE_PROVINCE(ESTATE_TILE(LEADER_OF_ESTATE(associated_data.raider)))) .. " failed. We were spotted but our warriors are safe")
 			end
 		end,
 	}

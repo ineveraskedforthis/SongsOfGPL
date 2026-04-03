@@ -9,7 +9,7 @@ local ffi = require("ffi")
 ---@field is_realm_guard number
 ---@class (exact) fat_realm_guard_id
 ---@field id realm_guard_id Unique realm_guard id
----@field guard warband_id 
+---@field guard estate_id 
 ---@field realm realm_id 
 
 ---@class struct_realm_guard
@@ -20,7 +20,7 @@ void dcon_delete_realm_guard(int32_t j);
 int32_t dcon_force_create_realm_guard(int32_t guard, int32_t realm);
 void dcon_realm_guard_set_guard(int32_t, int32_t);
 int32_t dcon_realm_guard_get_guard(int32_t);
-int32_t dcon_warband_get_realm_guard_as_guard(int32_t);
+int32_t dcon_estate_get_realm_guard_as_guard(int32_t);
 void dcon_realm_guard_set_realm(int32_t, int32_t);
 int32_t dcon_realm_guard_get_realm(int32_t);
 int32_t dcon_realm_get_realm_guard_as_realm(int32_t);
@@ -34,7 +34,7 @@ uint32_t dcon_realm_guard_size();
 ---realm_guard: LUA bindings---
 
 DATA.realm_guard_size = 15000
----@param guard warband_id
+---@param guard estate_id
 ---@param realm realm_id
 ---@return realm_guard_id
 function DATA.force_create_realm_guard(guard, realm)
@@ -68,18 +68,18 @@ function DATA.filter_realm_guard(func)
     return t
 end
 
----@param guard realm_guard_id valid warband_id
----@return warband_id Data retrieved from realm_guard 
+---@param guard realm_guard_id valid estate_id
+---@return estate_id Data retrieved from realm_guard 
 function DATA.realm_guard_get_guard(guard)
     return DCON.dcon_realm_guard_get_guard(guard - 1) + 1
 end
----@param guard warband_id valid warband_id
+---@param guard estate_id valid estate_id
 ---@return realm_guard_id realm_guard 
 function DATA.get_realm_guard_from_guard(guard)
-    return DCON.dcon_warband_get_realm_guard_as_guard(guard - 1) + 1
+    return DCON.dcon_estate_get_realm_guard_as_guard(guard - 1) + 1
 end
 ---@param realm_guard_id realm_guard_id valid realm_guard id
----@param value warband_id valid warband_id
+---@param value estate_id valid estate_id
 function DATA.realm_guard_set_guard(realm_guard_id, value)
     DCON.dcon_realm_guard_set_guard(realm_guard_id - 1, value - 1)
 end

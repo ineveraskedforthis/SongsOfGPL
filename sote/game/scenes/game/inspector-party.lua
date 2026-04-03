@@ -96,12 +96,12 @@ function re.draw(game)
 	local party_id = game.selected.warband
 	if party_id ~= nil and party_id ~= INVALID_ID and DCON.dcon_warband_is_valid(party_id - 1) then
 
-		local tile_id = WARBAND_TILE(party_id)
+		local tile_id = ESTATE_TILE(party_id)
 		local province = TILE_PROVINCE(tile_id)
 		local trade_wealth = DATA.province_get_trade_wealth(province)
 		local party_savings = DATA.warband_get_treasury(party_id)
 		local leader_id = require "game.entities.warband".active_leader(party_id)
-		local recruiter_id = WARBAND_RECRUITER(party_id)
+		local recruiter_id = ESTATE_RECRUITER(party_id)
 
 		-- interaction calculations
 		local daily_consumption = require "game.entities.warband".daily_supply_consumption(party_id)
@@ -124,11 +124,11 @@ function re.draw(game)
 		local buy_tt,sell_tt,give_tt,take_tt = OBSERVER_BUTTON_TOOLTIP,OBSERVER_BUTTON_TOOLTIP,OBSERVER_BUTTON_TOOLTIP,OBSERVER_BUTTON_TOOLTIP
 		if player_id ~= INVALID_ID then
 			player_savings = SAVINGS(player_id)
-			party_savings = WARBAND_SAVINGS(party_id)
+			party_savings = ESTATE_SAVINGS(party_id)
 			if leader_id == player_id or recruiter_id == player_id then
 				can_give,can_take,can_hire = true,true,true
-				give_tt = "Give " .. ut.to_fixed_point2(to_give) .. MONEY_SYMBOL .. " to " .. WARBAND_NAME(party_id)
-				take_tt = "Take " .. ut.to_fixed_point2(to_take) .. MONEY_SYMBOL .. " from " .. WARBAND_NAME(party_id)
+				give_tt = "Give " .. ut.to_fixed_point2(to_give) .. MONEY_SYMBOL .. " to " .. ESTATE_NAME(party_id)
+				take_tt = "Take " .. ut.to_fixed_point2(to_take) .. MONEY_SYMBOL .. " from " .. ESTATE_NAME(party_id)
 				if IN_SETTLEMENT(party_id) then
 					if to_buy > 0 then
 						can_buy = true
@@ -142,20 +142,20 @@ function re.draw(game)
 						sell_tt = "Sell " .. ut.to_fixed_point2(to_sell/daily_consumption) .. " days of supplies for "
 							.. ut.to_fixed_point2(to_sell*price) .. MONEY_SYMBOL
 					else
-						sell_tt = WARBAND_NAME(party_id) .. " has no food in inventory!"
+						sell_tt = ESTATE_NAME(party_id) .. " has no food in inventory!"
 					end
 				else
 					buy_tt = "You are not in a settlement!"
 					sell_tt = buy_tt
 				end
-			elseif province == LOCAL_PROVINCE(player_id) then
+			elseif province == POP_PROVINCE(player_id) then
 				can_give = true
-				give_tt = "Give " .. ut.to_fixed_point2(to_give) .. MONEY_SYMBOL .. " to " .. WARBAND_NAME(party_id)
-				take_tt = "You do not have permision to take from " .. WARBAND_NAME(party_id) .. " savings"
-				buy_tt = "You do not have permision to spend from " .. WARBAND_NAME(party_id) .. " savings"
-				sell_tt = "You do not have permision to sell " .. WARBAND_NAME(party_id) .. "'s supplies"
+				give_tt = "Give " .. ut.to_fixed_point2(to_give) .. MONEY_SYMBOL .. " to " .. ESTATE_NAME(party_id)
+				take_tt = "You do not have permision to take from " .. ESTATE_NAME(party_id) .. " savings"
+				buy_tt = "You do not have permision to spend from " .. ESTATE_NAME(party_id) .. " savings"
+				sell_tt = "You do not have permision to sell " .. ESTATE_NAME(party_id) .. "'s supplies"
 			else
-				buy_tt = "You are not in the same province as " .. WARBAND_NAME(party_id)
+				buy_tt = "You are not in the same province as " .. ESTATE_NAME(party_id)
 				give_tt, take_tt = buy_tt, buy_tt
 			end
 		end
@@ -165,7 +165,7 @@ function re.draw(game)
 		local leader_rect = layout:next(ui_panel.width, ut.BASE_HEIGHT*5)
 
 		party_ui.render_party_overview(game,leader_rect,party_id, function(title)
-			local party_name = WARBAND_NAME(party_id)
+			local party_name = ESTATE_NAME(party_id)
 			ui.panel(title,2,true)
 			ui.text(party_name,title,"left","center")
 			local status = DATA.warband_get_current_status(party_id)
@@ -231,7 +231,7 @@ function re.draw(game)
 		"two-coins.png",
 		months_of_upkeep,
 		mid_layout:next(draw_width,ut.BASE_HEIGHT),
-		WARBAND_NAME(party_id) .. " can afford to pay its troops for " .. ut.to_fixed_point2(months_of_upkeep) .. " months",
+		ESTATE_NAME(party_id) .. " can afford to pay its troops for " .. ut.to_fixed_point2(months_of_upkeep) .. " months",
 		ut.NUMBER_MODE.NUMBER,
 		ut.NAME_MODE.ICON)
 	-- middle row : supplies
@@ -300,22 +300,22 @@ function re.draw(game)
 								can_give_buy, can_take_sell = true, true
 							end
 						else
-							give_buy_tooltip = WARBAND_NAME(party_id) .. " can only buy from market when in a settlement"
-							take_sell_tooltip = WARBAND_NAME(party_id) .. " can only sell to market when in a settlement"
+							give_buy_tooltip = ESTATE_NAME(party_id) .. " can only buy from market when in a settlement"
+							take_sell_tooltip = ESTATE_NAME(party_id) .. " can only sell to market when in a settlement"
 						end
 					else
-						if (IN_SETTLEMENT(party_id) and PROVINCE(player_id) == province)
-							or WARBAND_TILE(UNIT_OF(player_id)) == tile_id
+						if (IN_SETTLEMENT(party_id) and POP_PROVINCE(player_id) == province)
+							or ESTATE_TILE(UNIT_OF(player_id)) == tile_id
 						then
 							can_give_buy = true
 							if leader_id == player_id then
 								can_take_sell = true
 							else
-								take_sell_tooltip = "I do not have permision to take from " .. WARBAND_NAME(party_id)
+								take_sell_tooltip = "I do not have permision to take from " .. ESTATE_NAME(party_id)
 									.. "'s inventory"
 							end
 						else
-							local base = "I need to be in the same location as " .. WARBAND_NAME(party_id)
+							local base = "I need to be in the same location as " .. ESTATE_NAME(party_id)
 							give_buy_tooltip = base .. " to gift goods"
 							take_sell_tooltip = base .. " to take goods"
 						end
@@ -491,13 +491,13 @@ function re.draw(game)
 										.. (good_case_toggle and DATA.trade_good_get_name(v) or DATA.use_case_get_name(v))
 										.. (interaction_toggle and " to market" or " to my inventory")
 								else
-									tooltip = WARBAND_NAME(party_id) .. " does not have any "
+									tooltip = ESTATE_NAME(party_id) .. " does not have any "
 										.. (good_case_toggle and DATA.trade_good_get_name(v) or DATA.use_case_get_name(v))
 										.. " in inventory"
 									can_interact = false
 								end
 								if interaction_toggle and leader_id ~= player_id then
-									tooltip = tooltip .. "\nI do not have permision to trade for " .. WARBAND_NAME(party_id)
+									tooltip = tooltip .. "\nI do not have permision to trade for " .. ESTATE_NAME(party_id)
 									can_interact = false
 								end
 								if interaction_toggle and trade_wealth <= 0 then
@@ -564,11 +564,11 @@ function re.draw(game)
 									can_interact = false
 								end
 								if interaction_toggle and leader_id ~= player_id then
-									tooltip = tooltip .. "\nI do not have permision to trade for " .. WARBAND_NAME(party_id)
+									tooltip = tooltip .. "\nI do not have permision to trade for " .. ESTATE_NAME(party_id)
 									can_interact = false
 								end
 								if interaction_toggle and party_savings <= 0 then
-									tooltip = tooltip .. "\n" .. WARBAND_NAME(party_id) .. " does not have any wealth to buy with"
+									tooltip = tooltip .. "\n" .. ESTATE_NAME(party_id) .. " does not have any wealth to buy with"
 										can_interact = false
 								end
 							end
@@ -605,11 +605,11 @@ function re.draw(game)
 							local value, tooltip
 							if good_case_toggle then
 								value = DATA.warband_get_inventory(party_id,v)
-								tooltip = WARBAND_NAME(party_id) .. " has " .. ut.to_fixed_point2(value)
+								tooltip = ESTATE_NAME(party_id) .. " has " .. ut.to_fixed_point2(value)
 									.. " units of " .. DATA.trade_good_get_name(v) .. " in inventory"
 							else
 								value = ev.available_use_case_for_party(party_id,v)
-								tooltip = WARBAND_NAME(party_id) .. " has " .. ut.to_fixed_point2(value)
+								tooltip = ESTATE_NAME(party_id) .. " has " .. ut.to_fixed_point2(value)
 									.. " units of " .. DATA.use_case_get_name(v) .. " in inventory"
 							end
 							ut.generic_number_field(
@@ -752,7 +752,7 @@ function re.draw(game)
 							local unit_type = UNIT_TYPE_OF(v)
 							if player_id ~= INVALID_ID then
 								if v == player_id then
-									if player_id == WARBAND_LEADER(party_id) then
+									if player_id == ESTATE_LEADER(party_id) then
 										tooltip = "I cannot quit my personal party!"
 									else
 										tooltip = "Quit warband?"
@@ -769,7 +769,7 @@ function re.draw(game)
 										.. NAME(v) .. "?"
 									can_fire = true
 								else
-									tooltip = "I do not have permision to remove units from " .. WARBAND_NAME(party_id)
+									tooltip = "I do not have permision to remove units from " .. ESTATE_NAME(party_id)
 								end
 							end
 							if ut.icon_button(
@@ -816,17 +816,17 @@ function re.draw(game)
 				local list_rect = bottom_layout:next(tabs_panel_rect.width, tabs_panel_rect.height-bottom_layout._pivot_y)
 
 				if leader_id ~= player_id or recruiter_id ~= player_id then
-					ui.text("No permission to hire units for " .. WARBAND_NAME(party_id), list_rect, "center", "center")
+					ui.text("No permission to hire units for " .. ESTATE_NAME(party_id), list_rect, "center", "center")
 					return
 				end
-				local province = PROVINCE(WARBAND_RECRUITER(party_id))
+				local province = POP_PROVINCE(ESTATE_RECRUITER(party_id))
 				if province == INVALID_ID then
 					ui.text("Can't hire units outside of settlement", list_rect, "center", "center")
 					return
 				end
 
 				local unemployed_pops
-				unemployed_pops = require "game.raws.values.demography".unemployed_pops(province)
+				unemployed_pops = require "game.raws.values.demography".unemployed_pops(tile_id)
 				hire_index = ut.scrollview(
 					list_rect,
 					function(i, rect)
@@ -861,7 +861,7 @@ function re.draw(game)
 								.. " (" .. tostring(base_price) .. MONEY_SYMBOL .. " monthly)",
 							hire_rect,
 							can_hire_pop and ("Cost: " .. tostring(hire_price) .. MONEY_SYMBOL .. "\nUpkeep: " .. tostring(base_price) .. MONEY_SYMBOL .. ")")
-								or (WARBAND_NAME(party_id) .. " does not have enough wealth to hire " .. NAME(unemployed_pops[i])),
+								or (ESTATE_NAME(party_id) .. " does not have enough wealth to hire " .. NAME(unemployed_pops[i])),
 							can_hire_pop
 						) then
 							require "game.raws.effects.demography".recruit(unemployed_pops[i], party_id, unit_type)

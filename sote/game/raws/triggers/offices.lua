@@ -27,10 +27,10 @@ end
 ---checks if character is a valid candidate for guard leader
 ---@param character Character
 ---@param realm Realm
-function triggers.is_warband_officer(character, realm)
-    local is_leader = DATA.get_warband_leader_from_leader(character)
-    local is_commander = DATA.get_warband_commander_from_commander(character)
-    local is_recruiter = DATA.get_warband_recruiter_from_recruiter(character)
+function triggers.is_estate_officer(character, realm)
+    local is_leader = DATA.get_estate_leader_from_leader(character)
+    local is_commander = DATA.get_estate_commander_from_commander(character)
+    local is_recruiter = DATA.get_estate_recruiter_from_recruiter(character)
 
     if
         is_leader == INVALID_ID
@@ -121,33 +121,33 @@ function triggers.tribute_collector(character, realm)
     return true
 end
 
----checks if character is a warband leader
+---checks if character is a estate leader
 ---@param character Character
----@param warband Warband
-function triggers.warband_leader(character, warband)
+---@param estate estate_id
+function triggers.estate_leader(character, estate)
     -- go through officer posts and check if that of highest filled
 
-    local l = DATA.get_warband_leader_from_leader(character)
-    local r = DATA.get_warband_recruiter_from_recruiter(character)
-    local c = DATA.get_warband_commander_from_commander(character)
+    local l = DATA.get_estate_leader_from_leader(character)
+    local r = DATA.get_estate_recruiter_from_recruiter(character)
+    local c = DATA.get_estate_commander_from_commander(character)
 
     if l ~= INVALID_ID then
-        local check_warband = DATA.warband_leader_get_warband(l)
-        if check_warband == warband then
+        local check_estate = DATA.estate_leader_get_estate(l)
+        if check_estate == estate then
             return true
         end
     end
 
     if r ~= INVALID_ID then
-        local check_warband = DATA.warband_recruiter_get_warband(r)
-        if check_warband == warband then
+        local check_estate = DATA.estate_recruiter_get_estate(r)
+        if check_estate == estate then
             return true
         end
     end
 
     if c ~= INVALID_ID then
-        local check_warband = DATA.warband_commander_get_warband(c)
-        if check_warband == warband then
+        local check_estate = DATA.estate_commander_get_estate(c)
+        if check_estate == estate then
             return true
         end
     end
@@ -169,7 +169,7 @@ function triggers.guard_leader(character, realm)
     local guard = DATA.get_realm_guard_from_realm(realm)
     if guard == INVALID_ID then return false end
     local warband = DATA.realm_guard_get_guard(guard)
-    return triggers.warband_leader(character, warband)
+    return triggers.estate_leader(character, warband)
 end
 
 ---checks if character can patrol the province
@@ -178,20 +178,20 @@ end
 function triggers.valid_patrol_participant(character, province)
     if BUSY(character) then return false end
     if PROVINCE_REALM(province) ~= REALM(character) then return false end
-    if PROVINCE(character) ~= province then return false end
+    if POP_PROVINCE(character) ~= province then return false end
 
     -- sanity checks passed, now check if character leads controls some warband
     local leading_warband = DATA.get_warband_leader_from_leader(character)
     if leading_warband ~= INVALID_ID then
         local warband = DATA.warband_leader_get_warband(leading_warband)
-        if DATA.warband_get_current_status(warband) ~= WARBAND_STATUS.IDLE then
+        if DATA.warband_get_current_status(warband) ~= ESTATE_STATUS.IDLE then
             return false
         end
         return true
     elseif triggers.guard_leader(character, REALM(character)) then
         local guard = DATA.get_realm_guard_from_realm(REALM(character))
         local warband = DATA.realm_guard_get_guard(guard)
-        if DATA.warband_get_current_status(warband) ~= WARBAND_STATUS.IDLE then
+        if DATA.warband_get_current_status(warband) ~= ESTATE_STATUS.IDLE then
             return false
         end
         return true

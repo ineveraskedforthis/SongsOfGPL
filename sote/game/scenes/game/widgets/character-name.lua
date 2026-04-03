@@ -16,7 +16,6 @@ local function name(character_id)
     local realm = REALM(character_id)
     local leader = LEADER(realm)
     local collector_of = DATA.tax_collector_get_realm(DATA.get_tax_collector_from_collector(character_id))
-    local guard = GUARD(LOCAL_REALM(character_id)) -- because guard dont move
     local title
     -- realm office
     if leader ~= INVALID_ID then
@@ -33,12 +32,7 @@ local function name(character_id)
     local in_warband
     local warband_leader = warband_utils.active_leader(character_id)
     if warband_leader and warband_leader ~= INVALID_ID then
-        in_warband = warband_leader
-        if guard and guard == in_warband then
-            title = title .. "Protector"
-        else
             title = title .. "Leader"
-        end
     else
         local warband_commander = warband_utils.active_commander(character_id)
         if warband_commander and warband_commander ~= INVALID_ID then
@@ -50,15 +44,10 @@ local function name(character_id)
                 in_warband = warband_recruiter
                 title = title .. "Recruiter"
             else
-                local unit_of = UNIT_OF(character_id)
-                if unit_of ~= INVALID_ID then
-                    in_warband = unit_of
-                    if guard and guard == in_warband then
-                        title = "Guard of "
-                    else
-                        local warband_unit = pop_utils.get_unit_type_of(character_id)
-                        title = strings.title(DATA.unit_type_get_name(warband_unit))
-                    end
+                local unit = UNIT_TYPE_OF(character_id)
+                if unit ~= INVALID_ID then
+                    local warband_unit = UNIT_TYPE_OF(character_id)
+                    title = strings.title(DATA.unit_type_get_name(warband_unit))
                 end
             end
         end
@@ -67,7 +56,7 @@ local function name(character_id)
         if guard and guard == in_warband then
             return title .. " of " .. REALM_NAME(guard)
         else
-            return title .. " of " .. WARBAND_NAME(character_id)
+            return title .. " of " .. ESTATE_NAME(character_id)
         end
     elseif realm ~= INVALID_ID then
         return strings.title(rank_name(character_id)) .. " of " .. DATA.realm_get_name(realm)

@@ -34,7 +34,7 @@ uint32_t dcon_building_estate_size();
 
 ---building_estate: LUA bindings---
 
-DATA.building_estate_size = 600000
+DATA.building_estate_size = 6000000
 ---@param estate estate_id
 ---@param building building_id
 ---@return building_estate_id

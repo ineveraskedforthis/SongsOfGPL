@@ -20,7 +20,7 @@ local function load()
 			if BUSY(root) then
 				return "You are too busy to consider it."
 			end
-			if LEADER_OF_WARBAND(root) == INVALID_ID then
+			if LEADER_OF_ESTATE(root) == INVALID_ID then
 				return "You have to be a leader of a party to raid settlements on your own."
 			end
 			return "Raid settlement"
@@ -31,23 +31,23 @@ local function load()
 		base_probability = 1 / 30,
 		pretrigger = function(root)
 			if BUSY(root) then return false end
-			if LEADER_OF_WARBAND(root) == INVALID_ID then
+			if LEADER_OF_ESTATE(root) == INVALID_ID then
 				return false
 			end
 			return true
 		end,
 		clickable = function(root, primary_target)
-			if PROVINCE(root) ~= INVALID_ID then
+			if POP_PROVINCE(root) ~= INVALID_ID then
 				return false
 			end
-			local party = LEADER_OF_WARBAND(root)
+			local party = LEADER_OF_ESTATE(root)
 			if party == INVALID_ID then
 				return false
 			end
-			if WARBAND_TILE(party) ~= DATA.province_get_center(TILE_PROVINCE(WARBAND_TILE(party))) then
+			if ESTATE_TILE(party) ~= DATA.province_get_center(TILE_PROVINCE(ESTATE_TILE(party))) then
 				return false
 			end
-			if PROVINCE_REALM(TILE_PROVINCE(WARBAND_TILE(party))) == INVALID_ID then
+			if PROVINCE_REALM(TILE_PROVINCE(ESTATE_TILE(party))) == INVALID_ID then
 				return false
 			end
 			return true
@@ -56,7 +56,7 @@ local function load()
 			return true
 		end,
 		ai_will_do = function(root, primary_target, secondary_target)
-			if PROVINCE_REALM(LOCAL_PROVINCE(root)) == REALM(root) then
+			if PROVINCE_REALM(POP_PROVINCE(root)) == REALM(root) then
 				return 0
 			end
 			if not HAS_TRAIT(root, TRAIT.WARLIKE) then
@@ -76,7 +76,7 @@ local function load()
 			if BUSY(root) then
 				return "You are too busy to consider it."
 			end
-			if LEADER_OF_WARBAND(root) == INVALID_ID then
+			if LEADER_OF_ESTATE(root) == INVALID_ID then
 				return "You have to be a leader of a party to enter settlements on your own."
 			end
 			return "Enter settlement and settle down for a while"
@@ -87,23 +87,23 @@ local function load()
 		base_probability = 1 / 30,
 		pretrigger = function(root)
 			if BUSY(root) then return false end
-			if LEADER_OF_WARBAND(root) == INVALID_ID then
+			if LEADER_OF_ESTATE(root) == INVALID_ID then
 				return false
 			end
 			return true
 		end,
 		clickable = function(root, primary_target)
-			if PROVINCE(root) ~= INVALID_ID then
+			if POP_PROVINCE(root) ~= INVALID_ID then
 				return false
 			end
-			local party = LEADER_OF_WARBAND(root)
+			local party = LEADER_OF_ESTATE(root)
 			if party == INVALID_ID then
 				return false
 			end
-			if WARBAND_TILE(party) ~= DATA.province_get_center(TILE_PROVINCE(WARBAND_TILE(party))) then
+			if ESTATE_TILE(party) ~= DATA.province_get_center(TILE_PROVINCE(ESTATE_TILE(party))) then
 				return false
 			end
-			if PROVINCE_REALM(TILE_PROVINCE(WARBAND_TILE(party))) == INVALID_ID then
+			if PROVINCE_REALM(TILE_PROVINCE(ESTATE_TILE(party))) == INVALID_ID then
 				return false
 			end
 			return true
@@ -120,7 +120,7 @@ local function load()
 			if ai_state.current_goal == AI_GOAL.RAID then
 				return 0
 			end
-			if ai_state.target_province == LOCAL_PROVINCE(root) then
+			if ai_state.target_province == POP_PROVINCE(root) then
 				return 1
 			end
 			return 0.5
@@ -137,7 +137,7 @@ local function load()
 			if BUSY(root) then
 				return "You are too busy to consider it."
 			end
-			if LEADER_OF_WARBAND(root) == INVALID_ID then
+			if LEADER_OF_ESTATE(root) == INVALID_ID then
 				return "You have to be a leader of a party to travel on your own."
 			end
 
@@ -150,14 +150,14 @@ local function load()
 		pretrigger = function(root)
 			if BUSY(root) then return false end
 
-			if LEADER_OF_WARBAND(root) == INVALID_ID then
+			if LEADER_OF_ESTATE(root) == INVALID_ID then
 				return false
 			end
 
 			return true
 		end,
 		clickable = function(root, primary_target)
-			if PROVINCE(root) == INVALID_ID then
+			if POP_PROVINCE(root) == INVALID_ID then
 				return false
 			end
 			return true
@@ -170,7 +170,7 @@ local function load()
 			if (ai_state == nil) then
 				return 0
 			end
-			if ai_state.target_province == LOCAL_PROVINCE(root) then
+			if ai_state.target_province == POP_PROVINCE(root) then
 				return 0
 			end
 			if ai_state.current_goal ==	AI_GOAL.IDLE then
@@ -190,7 +190,7 @@ local function load()
 			if BUSY(root) then
 				return "You are too busy to consider it."
 			end
-			if LEADER_OF_WARBAND(root) == INVALID_ID then
+			if LEADER_OF_ESTATE(root) == INVALID_ID then
 				return "You have to be a leader of a party to explore."
 			end
 			return "Explore province"
@@ -202,13 +202,13 @@ local function load()
 		pretrigger = function(root)
 			if BUSY(root) then return false end
 
-			if LEADER_OF_WARBAND(root) == INVALID_ID then
+			if LEADER_OF_ESTATE(root) == INVALID_ID then
 				return false
 			end
 
 			local potential_to_explore = false
 
-			DATA.for_each_province_neighborhood_from_origin(PROVINCE(root), function (item)
+			DATA.for_each_province_neighborhood_from_origin(POP_PROVINCE(root), function (item)
 				local neighbor = DATA.province_neighborhood_get_target(item)
 				if DATA.realm_get_known_provinces(REALM(root))[neighbor] == nil then
 					potential_to_explore = true
@@ -224,7 +224,7 @@ local function load()
 			return true
 		end,
 		ai_will_do = function(root, primary_target, secondary_target)
-			local reward = DATA.realm_get_quests_explore(REALM(root))[PROVINCE(root)] or 0
+			local reward = DATA.realm_get_quests_explore(REALM(root))[POP_PROVINCE(root)] or 0
 
 			if HAS_TRAIT(root, TRAIT.TRADER) then
 				return 1 / 36 + reward / 40 -- explore sometimes
@@ -235,13 +235,13 @@ local function load()
 			SET_BUSY(root)
 
 			if WORLD.player_character ~= root then
-				WORLD:emit_immediate_event("exploration-preparation", root, PROVINCE(root))
+				WORLD:emit_immediate_event("exploration-preparation", root, POP_PROVINCE(root))
 			elseif OPTIONS["exploration"] == 0 then
-				WORLD:emit_immediate_event("exploration-preparation", root, PROVINCE(root))
+				WORLD:emit_immediate_event("exploration-preparation", root, POP_PROVINCE(root))
 			elseif OPTIONS["exploration"] == 1 then
-				WORLD:emit_immediate_action("exploration-preparation-by-yourself", root, PROVINCE(root))
+				WORLD:emit_immediate_action("exploration-preparation-by-yourself", root, POP_PROVINCE(root))
 			elseif OPTIONS["exploration"] == 2 then
-				WORLD:emit_immediate_action("exploration-preparation-ask-for-help", root, PROVINCE(root))
+				WORLD:emit_immediate_action("exploration-preparation-ask-for-help", root, POP_PROVINCE(root))
 			end
 		end
 	}

@@ -26,7 +26,7 @@ function tb.mask(gam)
 	if character == INVALID_ID then
 		return true
 	end
-	local province = PROVINCE(character)
+	local province = POP_PROVINCE(character)
 	if province == INVALID_ID then
 		return true
 	end
@@ -117,8 +117,8 @@ function tb.draw(gam)
 		return
 	end
 
-	local settlment = PROVINCE(character)
-	local province = LOCAL_PROVINCE(character)
+	local settlment = POP_PROVINCE(character)
+	local province = POP_PROVINCE(character)
 
 	local tr = tb.rect()
 	ui.panel(tr)
@@ -191,7 +191,7 @@ function tb.draw(gam)
 		days_of_travel = economy_values.days_of_travel(party)
 		DATA.for_each_use_weight_from_use_case(CALORIES_USE_CASE,function(item)
 			local good = DATA.use_weight_get_trade_good(item)
-			local count = DATA.warband_get_inventory(party,good)
+			local count = DATA.estate_get_inventory(party,good)
 			if count > 0 then
 				party_food = party_food + count
 				local weight = DATA.use_weight_get_weight(item)
@@ -271,7 +271,7 @@ function tb.draw(gam)
 	DRAW_EFFECTS(trt)
 
 	-- Food
-	local amount = economy_values.get_local_amount_of_use(PROVINCE(character), CALORIES_USE_CASE)
+	local amount = economy_values.get_local_amount_of_use(POP_PROVINCE(character), CALORIES_USE_CASE)
 	uit.sqrt_number_entry_icon(
 		"noodles.png",
 		amount,
@@ -305,7 +305,7 @@ function tb.draw(gam)
 	uit.data_entry_icon("minions.png", tostring(math.floor(amount)), tr, trs)
 
 	-- Army size
-	local amount = warband_utils.size(LEADER_OF_WARBAND(character))
+	local amount = warband_utils.size(LEADER_OF_ESTATE(character))
 
 	local tr = layout:next(uit.BASE_HEIGHT * 3, uit.BASE_HEIGHT)
 	local trs = "Size of our realms armies."
@@ -355,7 +355,7 @@ function tb.draw(gam)
 		})
 	end
 
-	if province_utils.get_unemployment(PROVINCE(character)) > 5 then
+	if province_utils.get_unemployment(POP_PROVINCE(character)) > 5 then
 		table.insert(alerts, {
 			["icon"] = "miner.png",
 			["tooltip"] =
@@ -363,7 +363,7 @@ function tb.draw(gam)
 		})
 	end
 
-	if DATA.province_get_mood(PROVINCE(character)) < 1 then
+	if DATA.province_get_mood(POP_PROVINCE(character)) < 1 then
 		table.insert(alerts, {
 			["icon"] = "despair.png",
 			["tooltip"] = "Our people are unhappy. Gift money to your population or raid other realms.",
@@ -371,7 +371,7 @@ function tb.draw(gam)
 	end
 
 	if DATA.pop_get_rank(character) == CHARACTER_RANK.CHIEF then
-		if province_utils.get_infrastructure_efficiency(PROVINCE(character)) < 0.9 then
+		if province_utils.get_infrastructure_efficiency(POP_TILE(character)) < 0.9 then
 			table.insert(alerts, {
 				["icon"] = "horizon-road.png",
 				["tooltip"] =

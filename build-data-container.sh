@@ -105,7 +105,7 @@ if [[ $CompileDCon || $CompileLua ]] && ! [ -d "./build/DataContainer/.git" ]; t
     echo "Fetching DataContainer repository..."
     git clone https://github.com/ineveraskedforthis/DataContainer.git ./build/DataContainer --depth 1
 fi
-if [ $GenerateScript || $CompileDCon || $CompileLua ]]; then
+if [[ $GenerateScript || $CompileDCon || $CompileLua ]]; then
     echo "Running python build script..."
     python3 codegen/generator.py $CompileDCon $CompileLua true true
 fi

@@ -78,7 +78,7 @@ Trigger.Pretrigger.in_settlement = {
 		return { "You are not in a settlement!" }
 	end,
 	condition = function(root)
-		return PROVINCE(root) ~= INVALID_ID
+		return POP_PROVINCE(root) ~= INVALID_ID
 	end
 }
 
@@ -118,7 +118,7 @@ Trigger.Pretrigger.is_in_party = {
 Trigger.Pretrigger.not_in_party = {
 	tooltip_on_condition_failure = function(root, primary_target)
 		return { "You are a " .. DATA.unit_type_name(UNIT_TYPE_OF(root))
-			.. " of " .. WARBAND_NAME(UNIT_OF(root)) .. "!" }
+			.. " of " .. ESTATE_NAME(UNIT_OF(root)) .. "!" }
 	end,
 	condition = function(root)
 		return UNIT_OF(root) == INVALID_ID
@@ -133,7 +133,7 @@ function Trigger.Pretrigger.is_unit_type(unit_type)
 			local warband = UNIT_OF(root)
 			if warband ~= INVALID_ID then
 				return { "You are a " .. DATA.unit_type_name(UNIT_TYPE_OF(root))
-				.. " of " .. WARBAND_NAME(warband) }
+				.. " of " .. ESTATE_NAME(warband) }
 			end
 			return { "You are not in a party!" }
 		end,
@@ -151,7 +151,7 @@ function Trigger.Pretrigger.not_unit_type(unit_type)
 			local warband = UNIT_OF(root)
 			if warband ~= INVALID_ID then
 				return { "You are a " .. DATA.unit_type_get_name(UNIT_TYPE_OF(root))
-				.. " of " .. WARBAND_NAME(warband) }
+				.. " of " .. ESTATE_NAME(warband) }
 			end
 			return { "You are not in a party!" }
 		end,
@@ -177,7 +177,7 @@ Trigger.Pretrigger.at_province_center = {
 		return { "You have to settle at province center" }
 	end,
 	condition = function(root)
-		return WARBAND_TILE(LEADER_OF_WARBAND(root)) == DATA.province_get_center(LOCAL_PROVINCE(root))
+		return ESTATE_TILE(LEADER_OF_ESTATE(root)) == DATA.province_get_center(POP_PROVINCE(root))
 	end
 }
 
@@ -210,9 +210,9 @@ Trigger.Pretrigger.is_at_tributary_capital = {
 		return { "Local province does not pay tribute to your realm" }
 	end,
 	condition = function(root)
-		local province_in = PROVINCE(root)
+		local province_in = POP_PROVINCE(root)
 		if province_in == INVALID_ID then
-			province_in = TILE_PROVINCE(WARBAND_TILE(LEADER_OF_WARBAND(root)))
+			province_in = TILE_PROVINCE(ESTATE_TILE(LEADER_OF_ESTATE(root)))
 		end
 
 		return diplomacy_trigger.pays_tribute_to(PROVINCE_REALM(province_in), REALM(root))
@@ -225,7 +225,7 @@ Trigger.Pretrigger.at_core_realm_province = {
 		return { "You have not entered a settlement you can collect taxes from" }
 	end,
 	condition = function(root)
-		local province = PROVINCE(root)
+		local province = POP_PROVINCE(root)
 		if province == INVALID_ID then
 			return false
 		end
@@ -242,12 +242,12 @@ Trigger.Pretrigger.not_leading_party = {
 	tooltip_on_condition_failure = function(root, primary_target)
 		local warband = UNIT_OF(root)
 		if warband ~= INVALID_ID then
-			return { "You are leading " .. WARBAND_NAME(warband) }
+			return { "You are leading " .. ESTATE_NAME(warband) }
 		end
 		return { "You are not in a party!"}
 	end,
 	condition = function(root)
-		return UNIT_OF(root) ~= INVALID_ID and LEADER_OF_WARBAND(root) == INVALID_ID
+		return UNIT_OF(root) ~= INVALID_ID and LEADER_OF_ESTATE(root) == INVALID_ID
 	end
 }
 ---@type Pretrigger
@@ -255,12 +255,12 @@ Trigger.Pretrigger.leading_party = {
 	tooltip_on_condition_failure = function(root, primary_target)
 		local warband = UNIT_OF(root)
 		if warband ~= INVALID_ID then
-			return { "You are not leading " .. WARBAND_NAME(warband) }
+			return { "You are not leading " .. ESTATE_NAME(warband) }
 		end
 		return { "You are not in a party!"}
 	end,
 	condition = function(root)
-		return UNIT_OF(root) ~= INVALID_ID and LEADER_OF_WARBAND(root) ~= INVALID_ID
+		return UNIT_OF(root) ~= INVALID_ID and LEADER_OF_ESTATE(root) ~= INVALID_ID
 	end
 }
 
@@ -269,21 +269,21 @@ Trigger.Pretrigger.leading_idle_party = {
 	tooltip_on_condition_failure = function(root, primary_target)
 		local warband = UNIT_OF(root)
 		if warband ~= INVALID_ID then
-			if WARBAND_LEADER(warband) ~= root then
-				return { "You are not leading" .. WARBAND_NAME(warband) }
+			if ESTATE_LEADER(warband) ~= root then
+				return { "You are not leading" .. ESTATE_NAME(warband) }
 			end
-			if DATA.warband_get_current_status(warband) ~= WARBAND_STATUS.IDLE then
-				return { WARBAND_NAME(warband) .. " is not currently idle" }
+			if DATA.warband_get_current_status(warband) ~= ESTATE_STATUS.IDLE then
+				return { ESTATE_NAME(warband) .. " is not currently idle" }
 			end
 		end
 		return { "You are not in a party!" }
 	end,
 	condition = function(root)
-		local warband = LEADER_OF_WARBAND(root)
+		local warband = LEADER_OF_ESTATE(root)
 		if warband == INVALID_ID then
 			return false
 		end
-		if DATA.warband_get_current_status(warband) ~= WARBAND_STATUS.IDLE then
+		if DATA.warband_get_current_status(warband) ~= ESTATE_STATUS.IDLE then
 			return false
 		end
 		return true
@@ -296,23 +296,23 @@ Trigger.Pretrigger.leading_idle_guard = {
 		local warband = UNIT_OF(root)
 		if warband ~= INVALID_ID then
 			if DATA.warband_get_guard_of(warband) == INVALID_ID then
-				return { WARBAND_NAME(warband) .. " is not a realm guard" }
+				return { ESTATE_NAME(warband) .. " is not a realm guard" }
 			end
-			if WARBAND_RECRUITER(warband) ~= root then
-				return { "You are not leading " .. WARBAND_NAME(warband) }
+			if ESTATE_RECRUITER(warband) ~= root then
+				return { "You are not leading " .. ESTATE_NAME(warband) }
 			end
-			if DATA.warband_get_current_status(warband) ~= WARBAND_STATUS.IDLE then
-				return { WARBAND_NAME(warband) .. " is not currently idle" }
+			if DATA.warband_get_current_status(warband) ~= ESTATE_STATUS.IDLE then
+				return { ESTATE_NAME(warband) .. " is not currently idle" }
 			end
 		end
 		return { "You are not in a party!" }
 	end,
 	condition = function(root)
-		local warband = RECRUITER_OF_WARBAND(root)
+		local warband = RECRUITER_OF_ESTATE(root)
 		if warband == INVALID_ID then
 			return false
 		end
-		if DATA.warband_get_current_status(warband) ~= WARBAND_STATUS.IDLE then
+		if DATA.warband_get_current_status(warband) ~= ESTATE_STATUS.IDLE then
 			return false
 		end
 		if DATA.warband_get_guard_of(warband) == INVALID_ID then
@@ -328,7 +328,7 @@ Trigger.Pretrigger.leading_idle_warband_or_guard = {
 		return { "You do not lead any idle party or guard" }
 	end,
 	condition = function(root)
-		return office_triggers.valid_patrol_participant(root, PROVINCE(root))
+		return office_triggers.valid_patrol_participant(root, POP_PROVINCE(root))
 	end
 }
 
@@ -345,14 +345,14 @@ Trigger.Pretrigger.leader = {
 ---@type Pretrigger
 Trigger.Pretrigger.no_guard_at_local_realm = {
 	tooltip_on_condition_failure = function(root, primary_target)
-		local realm = province_utils.realm(PROVINCE(root))
+		local realm = province_utils.realm(POP_PROVINCE(root))
 		if realm ~= INVALID_ID then
-			return { REALM_NAME(realm) .. " is defended by " .. WARBAND_NAME() }
+			return { REALM_NAME(realm) .. " is defended by " .. ESTATE_NAME() }
 		end
 		return { "There is no settled realm!"}
 	end,
 	condition = function(root)
-		local realm = province_utils.realm(PROVINCE(root))
+		local realm = province_utils.realm(POP_PROVINCE(root))
 		if realm == INVALID_ID then
 			return false
 		end
@@ -364,14 +364,14 @@ Trigger.Pretrigger.no_guard_at_local_realm = {
 ---@type Pretrigger
 Trigger.Pretrigger.guard_at_local_realm = {
 	tooltip_on_condition_failure = function(root, primary_target)
-		local realm = province_utils.realm(PROVINCE(root))
+		local realm = province_utils.realm(POP_PROVINCE(root))
 		if realm ~= INVALID_ID then
 			return { REALM_NAME(realm) .. " has no guards!" }
 		end
 		return { "There is no settled realm!"}
 	end,
 	condition = function(root)
-		local realm = province_utils.realm(PROVINCE(root))
+		local realm = province_utils.realm(POP_PROVINCE(root))
 		if realm == INVALID_ID then
 			return false
 		end
@@ -383,18 +383,18 @@ Trigger.Pretrigger.guard_at_local_realm = {
 ---@type Pretrigger
 Trigger.Pretrigger.local_guard_exists_and_has_no_officer = {
 	tooltip_on_condition_failure = function(root, primary_target)
-		local realm = province_utils.realm(PROVINCE(root))
+		local realm = province_utils.realm(POP_PROVINCE(root))
 		if realm ~= INVALID_ID then
 			local guard = DATA.realm_guard_get_guard(DATA.get_realm_guard_from_realm(realm))
 			if guard ~= INVALID_ID then
-				return { WARBAND_NAME(guard) .. " is already being lead by " .. WARBAND_RECRUITER(guard) }
+				return { ESTATE_NAME(guard) .. " is already being lead by " .. ESTATE_RECRUITER(guard) }
 			end
 			return { REALM_NAME(realm) .. " has no guards!" }
 		end
 		return { "There is no settled realm!"}
 	end,
 	condition = function(root)
-		local realm = province_utils.realm(PROVINCE(root))
+		local realm = province_utils.realm(POP_PROVINCE(root))
 		if realm == INVALID_ID then
 			return false
 		end
@@ -426,7 +426,7 @@ Trigger.Pretrigger.leader_of_local_territory = {
 		return { "You are not a leader of local tribe" }
 	end,
 	condition = function(root)
-		local local_realm = province_utils.realm(PROVINCE(root))
+		local local_realm = province_utils.realm(POP_PROVINCE(root))
 		assert(local_realm ~= INVALID_ID)
 		return root == LEADER(local_realm)
 	end
@@ -465,7 +465,7 @@ Trigger.Pretrigger.designates_offices_local = {
 		return { "You are not allowed to manage local realm's offices" }
 	end,
 	condition = function(root)
-		return office_triggers.designates_offices(root, PROVINCE(root))
+		return office_triggers.designates_offices(root, POP_PROVINCE(root))
 	end
 }
 
@@ -494,7 +494,7 @@ function Trigger.Pretrigger.party_savings_at_least(x)
 		tooltip_on_condition_failure = function(root, primary_target)
 			local warband = UNIT_OF(root)
 			if warband ~= INVALID_ID then
-				return { WARBAND_NAME(warband) .. " doesn't have " .. ut.to_fixed_point2(x) .. MONEY_SYMBOL }
+				return { ESTATE_NAME(warband) .. " doesn't have " .. ut.to_fixed_point2(x) .. MONEY_SYMBOL }
 			end
 			return { "You are not in a party!" }
 		end,
@@ -524,7 +524,7 @@ Trigger.Targeted.orders_can_reach_target = {
 		return { "You can manage the realm only from it's capitol" }
 	end,
 	condition = function(root, primary_target)
-		return PROVINCE(root) == CAPITOL(REALM(primary_target))
+		return POP_PROVINCE(root) == CAPITOL(REALM(primary_target))
 	end
 }
 
@@ -555,7 +555,7 @@ Trigger.Targeted.valid_guard_leader_local = {
 		return { "They can't be a guard leader in our realm" }
 	end,
 	condition = function(root, primary_target)
-		return office_triggers.valid_guard_leader(primary_target, province_utils.realm(PROVINCE(root)))
+		return office_triggers.valid_guard_leader(primary_target, province_utils.realm(POP_PROVINCE(root)))
 	end
 }
 

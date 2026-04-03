@@ -244,10 +244,10 @@ function window.draw(gamescene)
 
 	local warband = gamescene.selected.warband
 	if (player_character  ~= INVALID_ID) and not warband then
-		if LEADER_OF_WARBAND(player_character) ~= INVALID_ID then
-			warband = LEADER_OF_WARBAND(player_character)
-		elseif RECRUITER_OF_WARBAND(player_character) ~= INVALID_ID then
-			warband = RECRUITER_OF_WARBAND(player_character)
+		if LEADER_OF_ESTATE(player_character) ~= INVALID_ID then
+			warband = LEADER_OF_ESTATE(player_character)
+		elseif RECRUITER_OF_ESTATE(player_character) ~= INVALID_ID then
+			warband = RECRUITER_OF_ESTATE(player_character)
 		elseif UNIT_OF(player_character) ~= INVALID_ID then
 			warband = UNIT_OF(player_character)
 		end
@@ -273,7 +273,7 @@ function window.draw(gamescene)
 		-- warband realm inspector button
 		ib.icon_button_to_realm(gamescene, realm, realm_rect)
 		-- warband name
-		ui.centered_text(WARBAND_NAME(warband) .. ", " .. desc, top_bar_layout:next(rect.width - (ut.BASE_HEIGHT + spacing) * 2, ut.BASE_HEIGHT))
+		ui.centered_text(ESTATE_NAME(warband) .. ", " .. desc, top_bar_layout:next(rect.width - (ut.BASE_HEIGHT + spacing) * 2, ut.BASE_HEIGHT))
 		-- close button
 		ib.icon_button_to_close(gamescene, top_bar_layout:next(ut.BASE_HEIGHT, ut.BASE_HEIGHT))
 	end
@@ -383,11 +383,11 @@ function window.draw(gamescene)
 
 	-- leader officer panel
 	local leader_rect = leader_layout:next(ut.BASE_HEIGHT * 14 + spacing * 2, ut.BASE_HEIGHT * 3 + spacing * 2)
-	local leader = WARBAND_LEADER(warband)
+	local leader = ESTATE_LEADER(warband)
 	local guarding_realm = DATA.realm_guard_get_realm(DATA.get_realm_guard_from_guard(warband))
 	local leader_of_guarded_realm = LEADER(guarding_realm)
-	local recruiter = WARBAND_RECRUITER(warband)
-	local commander = WARBAND_COMMANDER(warband)
+	local recruiter = ESTATE_RECRUITER(warband)
+	local commander = ESTATE_COMMANDER(warband)
 	local upkeep = DATA.warband_get_total_upkeep(warband)
 
 	local recruiter_title = "Recruiter"
@@ -405,7 +405,7 @@ function window.draw(gamescene)
 		local realm_rect = leader_rect:subrect(ut.BASE_HEIGHT*2,0,leader_rect.width-ut.BASE_HEIGHT*2,ut.BASE_HEIGHT,"left","center")
 		ui.text(REALM_NAME(guarding_realm),realm_rect)
 		ui.tooltip("This warband is the capitol guard of " .. REALM_NAME(guarding_realm) .. ".",realm_rect)
-		ib.text_button_to_province_tile(gamescene, WARBAND_TILE(warband), leader_rect:subrect(ut.BASE_HEIGHT * 2, 0,leader_rect.width - ut.BASE_HEIGHT * 2, ut.BASE_HEIGHT, "left", "down"),
+		ib.text_button_to_province_tile(gamescene, ESTATE_TILE(warband), leader_rect:subrect(ut.BASE_HEIGHT * 2, 0,leader_rect.width - ut.BASE_HEIGHT * 2, ut.BASE_HEIGHT, "left", "down"),
 			"This warband guards the province of " .. PROVINCE_NAME(province) .. ".")
 	end
 
@@ -585,9 +585,9 @@ function window.draw(gamescene)
 			ut.NAME_MODE.ICON
 		)
 		-- work button
-		set_stance(rect:subrect(0, 0, rect_width / 2, rect_height / 3, "right", "center"), WARBAND_STANCE.WORK)
+		set_stance(rect:subrect(0, 0, rect_width / 2, rect_height / 3, "right", "center"), ESTATE_STANCE.WORK)
 		-- forage button
-		set_stance(rect:subrect(0, 0, rect_width / 2, rect_height / 3, "right", "down"), WARBAND_STANCE.FORAGE)
+		set_stance(rect:subrect(0, 0, rect_width / 2, rect_height / 3, "right", "down"), ESTATE_STANCE.FORAGE)
 	end
 	local supplies_rect = leader_layout:next(ut.BASE_HEIGHT * 9 + spacing, ut.BASE_HEIGHT * 3 + spacing * 2)
 	draw_supplies_panel(supplies_rect)
@@ -844,10 +844,10 @@ function window.draw(gamescene)
 
 		-- spotting and visibility
 		local status = ""
-		if DATA.warband_get_current_status(warband) == WARBAND_STATUS.IDLE then
+		if DATA.warband_get_current_status(warband) == ESTATE_STATUS.IDLE then
 			status = "\n - While the warband is idle, this bonus is multiplied by 5."
 		end
-		if DATA.warband_get_current_status(warband) ==  WARBAND_STATUS.PATROL then
+		if DATA.warband_get_current_status(warband) ==  ESTATE_STATUS.PATROL then
 			status = "\n - While the warband is on patrol, this bonus is multiplied by 10."
 		end
 		local unit_spotting = 0
@@ -1117,9 +1117,9 @@ function window.draw(gamescene)
 						local can_recruit = false
 						if (player_character == INVALID_ID) then
 
-						elseif warband == LEADER_OF_WARBAND(player_character) then
+						elseif warband == LEADER_OF_ESTATE(player_character) then
 							can_recruit = true
-						elseif warband == RECRUITER_OF_WARBAND(player_character) then
+						elseif warband == RECRUITER_OF_ESTATE(player_character) then
 							can_recruit = true
 						end
 
@@ -1172,12 +1172,12 @@ function window.draw(gamescene)
 					ui.text("No permission to hire units for this warband", unit_panel, "center", "center")
 					return
 				end
-				local province = PROVINCE(WARBAND_RECRUITER(warband))
+				local province = POP_PROVINCE(ESTATE_RECRUITER(warband))
 				if province == INVALID_ID then
 					ui.text("Can't hire units outside of settlement", unit_panel, "center", "center")
 					return
 				end
-				local unemployed_pops = demography_values.unemployed_pops(PROVINCE(recruiter))
+				local unemployed_pops = demography_values.unemployed_pops(POP_TILE(recruiter))
 				local rows = 4
 				local columns = math.floor((#unemployed_pops - 1) / rows + 1)
 				local width = unit_panel.width / columns

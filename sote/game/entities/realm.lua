@@ -111,7 +111,7 @@ end
 function realm_utils.Realm.remove_patrol(realm, prov, warband)
 	if DATA.realm_get_patrols(realm)[prov] then
 		DATA.realm_get_patrols(realm)[prov][warband] = nil
-		DATA.warband_set_current_status(warband, WARBAND_STATUS.IDLE)
+		DATA.warband_set_current_status(warband, ESTATE_STATUS.IDLE)
 	end
 end
 
@@ -177,13 +177,19 @@ end
 function realm_utils.Realm.get_average_needs_satisfaction(realm)
 	local sum = 0
 	local total_population = 1
-	DATA.for_each_realm_provinces_from_realm(realm, function (location)
-		local province = DATA.realm_provinces_get_province(location)
-		DATA.for_each_pop_location_from_location(province, function (item)
-			local pop = DATA.pop_location_get_pop(item)
-			local fat = DATA.fatten_pop(pop)
-			sum = sum + fat.basic_needs_satisfaction + fat.life_needs_satisfaction
-			total_population = total_population + 1
+	DATA.for_each_realm_provinces_from_realm(realm, function (provinces)
+		local province = DATA.realm_provinces_get_province(provinces)
+		DATA.for_each_tile_province_membership_from_province(province, function (membership)
+			local tile = DATA.tile_province_membership_get_tile(membership)
+			DATA.for_each_estate_location_from_tile(tile, function (location)
+				local estate = DATA.estate_location_get_estate(location)
+				DATA.for_each_estate_unit_from_estate(estate, function (item)
+					local pop = DATA.estate_unit_get_pop(item)
+					local fat = DATA.fatten_pop(pop)
+					sum = sum + fat.basic_needs_satisfaction + fat.life_needs_satisfaction
+					total_population = total_population + 1
+				end)
+			end)
 		end)
 	end)
 	return sum / total_population
@@ -195,7 +201,7 @@ function realm_utils.Realm.get_realm_population(realm)
 	local total = 0
 	DATA.for_each_realm_provinces_from_realm(realm, function (location)
 		local province = DATA.realm_provinces_get_province(location)
-		total = total + province_utils.home_population(province)
+		total = total + province_utils.all_home_population(province)
 	end)
 	return total
 end
@@ -285,21 +291,6 @@ function realm_utils.Realm.is_realm_in_hierarchy(realm, realm_to_check_for, sour
 end
 
 
----@param realm Realm
----@param warband Warband
-function realm_utils.Realm.raise_warband(realm, warband)
-	DATA.for_each_warband_unit_from_warband(warband, function (item)
-		local pop = DATA.warband_unit_get_unit(item)
-		-- print(pop.name, "raised from province")
-		local location = DATA.get_pop_location_from_pop(pop)
-		local province = DATA.pop_location_get_location(location)
-
-		if not IS_CHARACTER(pop) then
-			province_utils.take_away_pop(province, pop)
-		end
-	end)
-end
-
 ---Raise local army
 ---@param realm Realm
 ---@param province Province
@@ -314,7 +305,7 @@ function realm_utils.Realm.available_defenders(realm, province)
 	DATA.for_each_warband_location_from_location(DATA.province_get_center(province), function (item)
 		local warband = DATA.warband_location_get_warband(item)
 		local status = DATA.warband_get_current_status(warband)
-		if status == WARBAND_STATUS.PATROL then
+		if status == ESTATE_STATUS.PATROL then
 			table.insert(result, warband)
 		end
 	end)

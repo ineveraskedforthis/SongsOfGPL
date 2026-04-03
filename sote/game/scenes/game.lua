@@ -745,23 +745,24 @@ function gam.click_tile(tile_id)
 		gam.selected.tile = tile_id
 
 		if WORLD.player_character ~= INVALID_ID then
-			local warband = LEADER_OF_WARBAND(WORLD.player_character)
-			--print(warband)
-			if warband ~= INVALID_ID and PROVINCE(WORLD.player_character) == INVALID_ID then
-				--print(WARBAND_TILE(warband), gam.selected.tile)
+			local estate = POP_ESTATE(WORLD.player_character)
+			local leader = ESTATE_LEADER(estate)
+			local speed = military_values.estate_speed(estate)
+			local tile = ESTATE_TILE(estate)
+			if WORLD.player_character == leader then
 				local hours, path = pathfinding.pathfind(
-					WARBAND_TILE(warband),
+					ESTATE_TILE(estate),
 					gam.selected.tile,
-					military_values.warband_speed(warband),
+					speed,
 					DATA.realm_get_known_provinces(REALM(WORLD.player_character))
 				)
 				if path then
 					tabb.print(path)
-					table.insert(path, WARBAND_TILE(warband))
-					DATA.warband_set_current_path(warband, path)
-					DATA.warband_set_movement_progress(
-						warband,
-						pathfinding.tile_distance(WARBAND_TILE(warband), path[#path], military_values.warband_speed(warband))
+					table.insert(path, tile)
+					DATA.estate_set_current_path(estate, path)
+					DATA.estate_set_movement_progress(
+						estate,
+						pathfinding.tile_distance(tile, path[#path], speed)
 					)
 				end
 				-- gam.selected.current_path = path
@@ -910,7 +911,7 @@ function gam.draw()
 	if gam.planet_shader:hasUniform("player_tile") then
 		local character = WORLD.player_character
 		if character ~= INVALID_ID then
-			local province = PROVINCE(WORLD.player_character)
+			local province = POP_PROVINCE(WORLD.player_character)
 			if province ~= INVALID_ID then
 				gam.planet_shader:send('player_tile', DATA.province_get_center(province) - 1)
 			end
@@ -1298,11 +1299,11 @@ function gam.draw()
 			local province_visible = true
 			local character = WORLD.player_character
 			if character ~= INVALID_ID then
-				local province = PROVINCE(character)
+				local province = POP_PROVINCE(character)
 				if province ~= INVALID_ID then
 					local realm = REALM(character)
 					province_visible = false
-					if DATA.realm_get_known_provinces(realm)[tile.province(tile_id)] then
+					if DATA.realm_get_known_provinces(realm)[TILE_PROVINCE(tile_id)] then
 						province_visible = true
 					end
 				end
@@ -1319,7 +1320,7 @@ function gam.draw()
 
 			--- draw warband icons:
 			local count = 0
-			DATA.for_each_warband_location_from_location(tile_id, function (item)
+			DATA.for_each_estate_location_from_tile(tile_id, function (item)
 				count = count + 1
 			end)
 
@@ -1331,11 +1332,11 @@ function gam.draw()
 			end
 			if count > 0 then
 				local current = 0
-				DATA.for_each_warband_location_from_location(tile_id, function (item)
+				DATA.for_each_estate_location_from_tile(tile_id, function (item)
 					rect_for_icons.x = x + math.cos(2 * math.pi * current / count) * radius - size / 4
 					rect_for_icons.y = y + math.sin(2 * math.pi * current / count) * radius - size / 4
 					current = current + 1
-					portrait(rect_for_icons, WARBAND_LEADER(DATA.warband_location_get_warband(item)))
+					portrait(rect_for_icons, ESTATE_LEADER(DATA.estate_location_get_estate(item)))
 				end)
 			end
 			rect_for_icons.width = size
@@ -1393,7 +1394,7 @@ function gam.draw()
 			if valid then
 				DATA.for_each_tile_province_membership_from_province(td, function (item)
 					local local_tile = DATA.tile_province_membership_get_tile(item)
-					DATA.for_each_warband_location_from_location(local_tile, function (item)
+					DATA.for_each_estate_location_from_tile(local_tile, function (item)
 						tiles_to_draw[local_tile] = local_tile
 					end)
 				end)
@@ -1406,10 +1407,9 @@ function gam.draw()
 	end
 
 	--print(gam.selected.tile)
-	local warband = LEADER_OF_WARBAND(WORLD.player_character)
-
-	if warband ~= INVALID_ID and DATA.warband_get_current_path(warband) ~= nil and DATA.warband_get_current_path(warband)[1] then
-		local x, y, z = tile_to_x_y(DATA.warband_get_current_path(warband)[1])
+	local estate = POP_ESTATE(WORLD.player_character)
+	if estate ~= INVALID_ID and DATA.estate_get_current_path(estate) ~= nil and DATA.estate_get_current_path(estate)[1] then
+		local x, y, z = tile_to_x_y(DATA.estate_get_current_path(estate)[1])
 		rect_for_icons.x = x - size / 2
 		rect_for_icons.y = y - size / 2
 		rect_for_icons.width = size
@@ -1417,8 +1417,8 @@ function gam.draw()
 		require "game.scenes.game.widgets.onmap.path" (
 			gam,
 			rect_for_icons,
-			WARBAND_TILE(warband),
-			DATA.warband_get_current_path(warband),
+			ESTATE_TILE(estate),
+			DATA.estate_get_current_path(estate),
 			tile_to_x_y
 		)
 	end
@@ -1805,7 +1805,7 @@ function gam.draw()
 	if gam.clicked_tile_id ~= INVALID_ID then
 		if WORLD.player_character ~= INVALID_ID then
 			local realm = WORLD:player_realm()
-			local province = LOCAL_PROVINCE(WORLD.player_character)
+			local province = POP_PROVINCE(WORLD.player_character)
 			local pro = tile.province(gam.clicked_tile_id)
 			if realm ~= INVALID_ID then
 				if (DATA.realm_get_known_provinces(realm)[pro] == nil) and (pro ~= province) then
@@ -1951,8 +1951,8 @@ function gam.draw()
 
 	-- DRAWING AN ARROW TOWARD PLAYERS PROVINCE
 	local player = WORLD.player_character
-	if player ~= INVALID_ID and PROVINCE(player) == INVALID_ID and gam.inspector == nil then
-		local center = LOCAL_TILE(WORLD.player_character)
+	if player ~= INVALID_ID and POP_PROVINCE(player) == INVALID_ID and gam.inspector == nil then
+		local center = POP_TILE(WORLD.player_character)
 		local x, y, z = tile.get_cartesian(center)
 		local target = cpml.vec3.new(x, y, z)
 		local plane_geodesic = gam.camera_position:cross(target)
@@ -2013,15 +2013,12 @@ function gam.draw()
 
 
 	if PROFILE_FLAG then
-		local pop_count, chr_count, war_count, est_count, rlm_count = 0, 0, 0, 0, 0
+		local pop_count, chr_count, est_count, rlm_count = 0, 0, 0, 0, 0
 		DATA.for_each_pop(function (item)
 			pop_count = pop_count + 1
 			if IS_CHARACTER(item) then
 				chr_count = chr_count + 1
 			end
-		end)
-		DATA.for_each_warband(function (item)
-			war_count = war_count + 1
 		end)
 		DATA.for_each_estate(function (item)
 			est_count = est_count + 1
@@ -2034,8 +2031,7 @@ function gam.draw()
 		local pop_rect = profile_rect:subrect(50, 0, 100, 20, "left", "up")
 		local chr_rect = profile_rect:subrect(150, 0, 100, 20, "left", "up")
 		local est_rect = profile_rect:subrect(250, 0, 100, 20, "left", "up")
-		local war_rect = profile_rect:subrect(350, 0, 100, 20, "left", "up")
-		local rlm_rect = profile_rect:subrect(450, 0, 100, 20, "left", "up")
+		local rlm_rect = profile_rect:subrect(350, 0, 100, 20, "left", "up")
 		ui.panel(profile_rect)
 		profile_rect.y = profile_rect.y + 20
 		profile_rect.height = profile_rect.height - 20
@@ -2060,7 +2056,6 @@ function gam.draw()
 		ut.generic_number_field("POP", pop_count, pop_rect, "number of pop in world",ut.NUMBER_MODE.INTEGER,ut.NAME_MODE.NAME)
 		ut.generic_number_field("CHR", chr_count, chr_rect, "number of characters in world",ut.NUMBER_MODE.INTEGER,ut.NAME_MODE.NAME)
 		ut.generic_number_field("EST", est_count, est_rect, "number of active estates in world",ut.NUMBER_MODE.INTEGER,ut.NAME_MODE.NAME)
-		ut.generic_number_field("WAR", war_count, war_rect, "number of characters in world",ut.NUMBER_MODE.INTEGER,ut.NAME_MODE.NAME)
 		ut.generic_number_field("RLM", rlm_count, rlm_rect, "number of active realms in world",ut.NUMBER_MODE.INTEGER,ut.NAME_MODE.NAME)
 	end
 end

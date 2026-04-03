@@ -42,15 +42,9 @@ local function load()
 				end
 			end
 
-			-- warbands without leader dissolve
-			local leads_warband = DATA.warband_leader_get_warband(DATA.get_warband_leader_from_leader(character))
-			if leads_warband ~= INVALID_ID then
-				me.dissolve_warband(character)
-			end
-
-			local commander = DATA.get_warband_commander_from_commander(character)
+			local commander = DATA.get_estate_commander_from_commander(character)
 			if commander ~= INVALID_ID then
-				local warband = DATA.warband_commander_get_warband(commander)
+				local warband = DATA.estate_commander_get_estate(commander)
 				-- check if it was a guard:
 				local guarded_realm = DATA.realm_guard_get_realm(DATA.get_realm_guard_from_guard(warband))
 
@@ -86,7 +80,7 @@ local function load()
 				ee.add_pop_savings(successor, inheritance, ECONOMY_REASON.INHERITANCE)
 				ee.add_pop_savings(character, -inheritance, ECONOMY_REASON.INHERITANCE)
 			else
-				ee.change_local_wealth(PROVINCE(character), inheritance, ECONOMY_REASON.INHERITANCE)
+				ee.change_local_wealth(POP_PROVINCE(character), inheritance, ECONOMY_REASON.INHERITANCE)
 				ee.add_pop_savings(character, -inheritance, ECONOMY_REASON.INHERITANCE)
 			end
 
@@ -110,8 +104,9 @@ local function load()
 
 				-- find most popular noble which lives here and currently stays in the province:
 				if successor == INVALID_ID then
-					DATA.for_each_character_location_from_location(capitol, function (character_location)
+					DATA.for_each_character_location(function (character_location)
 						local noble = DATA.character_location_get_character(character_location)
+						if POP_PROVINCE(noble) ~= capitol then return end
 						if noble == character then
 							return
 						end
@@ -132,8 +127,9 @@ local function load()
 
 				-- find noble again but remove restriction of being in capitol
 				if successor == INVALID_ID then
-					DATA.for_each_home_from_home(capitol, function (character_location)
+					DATA.for_each_home(function (character_location)
 						local noble = DATA.home_get_pop(character_location)
+						if ESTATE_PROVINCE(HOME(noble)) ~= capitol then return end
 						if not IS_CHARACTER(noble) then
 							return
 						end
@@ -155,7 +151,9 @@ local function load()
 				--- it means that there everyone else is a pop
 				--- try to find the oldest local pop to turn into character
 				if successor == INVALID_ID then
-					DATA.for_each_home_from_home(capitol, function (character_location)
+					DATA.for_each_home(function (character_location)
+						local estate = DATA.home_get_estate(character_location)
+						if ESTATE_PROVINCE(estate) ~= capitol then return end
 						local pop = DATA.home_get_pop(character_location)
 						if pop == character then
 							return
@@ -173,7 +171,9 @@ local function load()
 
 				--- if there is no pop which could become a leader: try to find at least some character here:
 				if successor == INVALID_ID then
-					DATA.for_each_character_location_from_location(capitol, function (character_location)
+					DATA.for_each_character_location(function (character_location)
+						local estate = DATA.character_location_get_estate(character_location)
+						if ESTATE_PROVINCE(estate) ~= capitol then return end
 						local noble = DATA.character_location_get_character(character_location)
 						if noble == character then
 							return

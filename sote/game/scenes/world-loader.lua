@@ -202,10 +202,10 @@ function wl.load_default()
 			DATA.tile_set_is_land(tile_id, jan_is_land or jul_is_land)
 			DATA.tile_set_is_fresh(tile_id, jan_is_fresh or jul_is_fresh)
 			DATA.tile_set_january_waterflow(tile_id, jan_waterflow)
-			DATA.tile_set_january_waterflow(tile_id, jul_waterflow)
+			DATA.tile_set_july_waterflow(tile_id, jul_waterflow)
 			DATA.tile_set_waterlevel(tile_id, 0) -- loaded tiles have a watertable of 0!
-			local waterflow = (jan_waterflow + jul_waterflow) / 2
-			if waterflow > 2500.0 then
+			--local waterflow = (jan_waterflow + jul_waterflow) / 2
+			if jan_waterflow > 0 and jul_waterflow > 0 then
 				DATA.tile_set_has_river(tile_id, true)
 			end
 		end)
@@ -434,17 +434,17 @@ function wl.load_default()
 	coroutine.yield()
 	coroutine.yield()
 
-	coroutine.yield()
-	coroutine.yield()
-	do
-		local time = love.timer.getTime()
-		print("Recalculating provincial hydration...")
-		require "game.world-gen.province-hydration".run()
-		print("Provincial hydration recalculated!")
-		print(love.timer.getTime() - time)
-	end
-	coroutine.yield()
-	coroutine.yield()
+	-- coroutine.yield()
+	-- coroutine.yield()
+	-- do
+	-- 	local time = love.timer.getTime()
+	-- 	print("Recalculating provincial hydration...")
+	-- 	require "game.world-gen.province-hydration".run()
+	-- 	print("Provincial hydration recalculated!")
+	-- 	print(love.timer.getTime() - time)
+	-- end
+	-- coroutine.yield()
+	-- coroutine.yield()
 
 	coroutine.yield()
 	coroutine.yield()

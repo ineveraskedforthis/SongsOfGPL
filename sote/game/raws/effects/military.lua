@@ -19,15 +19,15 @@ local MilitaryEffects = {}
 ---Gathers new warband in the name of *leader*
 ---@param leader Character
 function MilitaryEffects.gather_warband(leader)
-	local settlement = PROVINCE(leader)
-	local province = LOCAL_PROVINCE(leader)
-	if LEADER_OF_WARBAND(leader) ~= INVALID_ID then
+	local settlement = POP_PROVINCE(leader)
+	local province = POP_PROVINCE(leader)
+	if LEADER_OF_ESTATE(leader) ~= INVALID_ID then
 		return
 	end
-	if RECRUITER_OF_WARBAND(leader) ~= INVALID_ID then
+	if RECRUITER_OF_ESTATE(leader) ~= INVALID_ID then
 		return
 	end
-	if COMMANDER_OF_WARBAND(leader) ~= INVALID_ID then
+	if COMMANDER_OF_ESTATE(leader) ~= INVALID_ID then
 		return
 	end
 
@@ -36,9 +36,9 @@ function MilitaryEffects.gather_warband(leader)
 		DATA.warband_set_in_settlement(warband,true)
 		DATA.force_create_warband_location(DATA.province_get_center(province), warband)
 	else -- otherwise pop is already in a warband and is starting one there
-		DATA.force_create_warband_location(WARBAND_TILE(leader), warband)
+		DATA.force_create_warband_location(ESTATE_TILE(leader), warband)
 	end
-	DATA.warband_set_current_status(warband, WARBAND_STATUS.IDLE)
+	DATA.warband_set_current_status(warband, ESTATE_STATUS.IDLE)
 	DATA.warband_set_idle_stance(warband, WARBAND_STANCE.FORAGE)
 	DATA.warband_set_name(warband, "Party of " .. NAME(leader))
 
@@ -60,7 +60,7 @@ function MilitaryEffects.gather_guard(realm)
 	local warband = DATA.create_warband()
 	DATA.force_create_warband_location(DATA.province_get_center(province), warband)
 	DATA.warband_set_in_settlement(warband,true)
-	DATA.warband_set_current_status(warband, WARBAND_STATUS.IDLE)
+	DATA.warband_set_current_status(warband, ESTATE_STATUS.IDLE)
 	DATA.warband_set_idle_stance(warband, WARBAND_STANCE.FORAGE)
 	DATA.warband_set_name(warband, "Guard of " .. DATA.realm_get_name(realm))
 	DATA.force_create_realm_guard(warband, realm)
@@ -104,10 +104,10 @@ function MilitaryEffects.dissolve_warband(leader)
 	if warband == INVALID_ID then
 		return
 	end
-	local local_province = TILE_PROVINCE(WARBAND_TILE(warband))
+	local local_province = TILE_PROVINCE(ESTATE_TILE(warband))
 	DATA.for_each_warband_unit_from_warband(warband, function (item)
-		local unit = DATA.warband_unit_get_unit(item)
-		DATA.force_create_pop_location(local_province, unit)
+		local unit = DATA.estate_unit_get_unit(item)
+		DATA.force_create_estate_unit(local_province, unit)
 		if (IS_CHARACTER(unit)) then
 			DATA.force_create_character_location(local_province, unit)
 		end
@@ -119,7 +119,7 @@ function MilitaryEffects.dissolve_warband(leader)
 	economy_effects.gift_to_warband(warband, leader, -DATA.warband_get_treasury(warband))
 	DATA.delete_warband(warband)
 
-	if WORLD:does_player_see_province_news(TILE_PROVINCE(WARBAND_TILE(warband))) then
+	if WORLD:does_player_see_province_news(TILE_PROVINCE(ESTATE_TILE(warband))) then
 		WORLD:emit_notification(NAME(leader) .. " dissolved his warband.")
 	end
 end
@@ -132,7 +132,7 @@ function MilitaryEffects.update_patrol(root)
 		local total_patrol_size = 0
 		DATA.for_each_warband_location_from_location(DATA.province_get_center(province), function (wloc)
 			local warband = DATA.warband_location_get_warband(wloc)
-			if (DATA.warband_get_current_status(warband) == WARBAND_STATUS.PATROL) then
+			if (DATA.warband_get_current_status(warband) == ESTATE_STATUS.PATROL) then
 				local size = warband_utils.size(warband)
 				total_patrol_size = total_patrol_size + size
 			end
@@ -174,7 +174,7 @@ function MilitaryEffects.raid(raider, hide)
 	assert(leadership ~= INVALID_ID)
 	local warband = DATA.warband_leader_get_warband(leadership)
 
-	local tile = WARBAND_TILE(warband)
+	local tile = ESTATE_TILE(warband)
 	local province = TILE_PROVINCE(tile)
 
 	---print("center check")
@@ -333,15 +333,15 @@ function MilitaryEffects.raid(raider, hide)
 end
 
 ---Sends party toward target
----@param party warband_id
+---@param party estate_id
 ---@param target tile_id
 function MilitaryEffects.send_party(party, target)
 	local origin = DATA.warband_location_get_location(DATA.get_warband_location_from_warband(party))
 	local _, path = pathfinding.pathfind(
 		origin,
 		target,
-		military_values.warband_speed(party),
-		DATA.realm_get_known_provinces(REALM(WARBAND_LEADER(party)))
+		military_values.estate_speed(party),
+		DATA.realm_get_known_provinces(REALM(ESTATE_LEADER(party)))
 	)
 	if path then
 		DATA.warband_set_current_path(party, path)

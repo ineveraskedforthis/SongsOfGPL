@@ -108,12 +108,12 @@ end
 ---commenting
 ---@param character pop_id
 function effects.enforce_tributary(character)
-	local warband = LEADER_OF_WARBAND(character)
+	local warband = LEADER_OF_ESTATE(character)
 	if (warband == INVALID_ID) then
 		print("effects.enforce_tributary invalid warband")
 		return
 	end
-	local tile = WARBAND_TILE(warband)
+	local tile = ESTATE_TILE(warband)
 	local province = TILE_PROVINCE(tile)
 	local realm = PROVINCE_REALM(province)
 	if realm == INVALID_ID then
@@ -121,7 +121,7 @@ function effects.enforce_tributary(character)
 		-- The province doesn't have a realm
 		return
 	end
-	if DATA.province_get_center(province) ~= WARBAND_TILE(warband) then
+	if DATA.province_get_center(province) ~= ESTATE_TILE(warband) then
 		return
 	end
 

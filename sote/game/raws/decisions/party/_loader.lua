@@ -32,15 +32,15 @@ return function ()
 		end,
 		function(root)
 			root = root
-			if LEADER_OF_WARBAND(root) == INVALID_ID and HAS_TRAIT(root, TRAIT.WARLIKE) then
+			if LEADER_OF_ESTATE(root) == INVALID_ID and HAS_TRAIT(root, TRAIT.WARLIKE) then
 				return 1
 			end
 
-			if LEADER_OF_WARBAND(root) == INVALID_ID and HAS_TRAIT(root, TRAIT.TRADER) then
+			if LEADER_OF_ESTATE(root) == INVALID_ID and HAS_TRAIT(root, TRAIT.TRADER) then
 				return 1
 			end
 
-			if LEADER_OF_WARBAND(root) == INVALID_ID and RANK(root) == CHARACTER_RANK.CHIEF then
+			if LEADER_OF_ESTATE(root) == INVALID_ID and RANK(root) == CHARACTER_RANK.CHIEF then
 				return 1
 			end
 
@@ -74,7 +74,7 @@ return function ()
 		'leave-party',
 		"Leave my current party",
 		function(root)
-			return "Leave " .. WARBAND_NAME(UNIT_OF(root)) .."?"
+			return "Leave " .. ESTATE_NAME(UNIT_OF(root)) .."?"
 		end,
 		1/12, -- Once every year on average
 		{
@@ -87,13 +87,13 @@ return function ()
 		function(root)
 			local warband = UNIT_OF(root)
 			demography_effects.unrecruit(root)
-			if WORLD:does_player_see_province_news(TILE_PROVINCE(WARBAND_TILE(warband))) then
+			if WORLD:does_player_see_province_news(TILE_PROVINCE(ESTATE_TILE(warband))) then
 				WORLD:emit_notification(NAME(root) .. " quit " .. DATA.warband_get_name(warband) .. ".")
 			end
 		end,
 		function(root)
 			-- follower only want to leave if in a settlement
-			local province = PROVINCE(root)
+			local province = POP_PROVINCE(root)
 			if UNIT_TYPE_OF(root) == UNIT_TYPE.FOLLOWER and province ~= INVALID_ID then
 				-- TODO get AI target province and leave if there?
 				if province == HOME(root) then
@@ -108,7 +108,7 @@ return function ()
 		'change-unit-warrior',
 		"Become a warrior in my party",
 		function(root)
-			return "Fight for " .. WARBAND_NAME(UNIT_OF(root))
+			return "Fight for " .. ESTATE_NAME(UNIT_OF(root))
 		end,
 		1/24, -- Once every 2 years on average
 		{
@@ -142,7 +142,7 @@ return function ()
 		'change-unit-civilian',
 		"Become a civilian in my party",
 		function(root)
-			return "Stop fighting with " .. WARBAND_NAME(UNIT_OF(root))
+			return "Stop fighting with " .. ESTATE_NAME(UNIT_OF(root))
 		end,
 		1/24, -- Once every 2 years on average
 		{
@@ -176,7 +176,7 @@ return function ()
 		'donate-wealth-party',
 		"Donate wealth to your party.",
 		function(root)
-			return "Donate " .. require "game.ui-utils".to_fixed_point2(SAVINGS(root)/3) .. MONEY_SYMBOL .. " to " .. WARBAND_NAME(UNIT_OF(root))
+			return "Donate " .. require "game.ui-utils".to_fixed_point2(SAVINGS(root)/3) .. MONEY_SYMBOL .. " to " .. ESTATE_NAME(UNIT_OF(root))
 		end,
 		1/3, -- Once every 3 months on average
 		{
@@ -187,10 +187,10 @@ return function ()
 			pretriggers.is_in_party
 		},
 		function(root)
-			economic_effects.gift_to_warband(LEADER_OF_WARBAND(root), root, SAVINGS(root) / 3)
+			economic_effects.gift_to_warband(LEADER_OF_ESTATE(root), root, SAVINGS(root) / 3)
 		end,
 		function(root)
-			if LEADER_OF_WARBAND(root) ~= INVALID_ID and DATA.warband_get_treasury(LEADER_OF_WARBAND(root)) < SAVINGS(root) / 2 then
+			if LEADER_OF_ESTATE(root) ~= INVALID_ID and DATA.warband_get_treasury(LEADER_OF_ESTATE(root)) < SAVINGS(root) / 2 then
 				return 1
 			end
 			return 0
@@ -218,7 +218,7 @@ return function ()
 			--effect
 			local party = UNIT_OF(root)
 			local desire = require "game.entities.warband".daily_supply_consumption(party)*30
-			local amount = economic_values.get_local_amount_of_use(PROVINCE(root),CALORIES_USE_CASE)
+			local amount = economic_values.get_local_amount_of_use(POP_PROVINCE(root),CALORIES_USE_CASE)
 			require "game.raws.effects.economy".party_buy_use(party, CALORIES_USE_CASE, math.min(amount,desire))
 		end,
 		function(root)

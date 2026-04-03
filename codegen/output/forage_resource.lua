@@ -12,16 +12,13 @@ local ffi = require("ffi")
 ---@field name string 
 ---@field description string 
 ---@field icon string 
----@field handle JOBTYPE 
 
 ---@class struct_forage_resource
----@field handle JOBTYPE 
 
 ---@class (exact) forage_resource_id_data_blob_definition
 ---@field name string 
 ---@field description string 
 ---@field icon string 
----@field handle JOBTYPE 
 ---Sets values of forage_resource for given id
 ---@param id forage_resource_id
 ---@param data forage_resource_id_data_blob_definition
@@ -29,12 +26,9 @@ function DATA.setup_forage_resource(id, data)
     DATA.forage_resource_set_name(id, data.name)
     DATA.forage_resource_set_description(id, data.description)
     DATA.forage_resource_set_icon(id, data.icon)
-    DATA.forage_resource_set_handle(id, data.handle)
 end
 
 ffi.cdef[[
-void dcon_forage_resource_set_handle(int32_t, uint8_t);
-uint8_t dcon_forage_resource_get_handle(int32_t);
 int32_t dcon_create_forage_resource();
 bool dcon_forage_resource_is_valid(int32_t);
 void dcon_forage_resource_resize(uint32_t sz);
@@ -51,7 +45,7 @@ DATA.forage_resource_icon= {}
 
 ---forage_resource: LUA bindings---
 
-DATA.forage_resource_size = 10
+DATA.forage_resource_size = 7
 ---@return forage_resource_id
 function DATA.create_forage_resource()
     ---@type forage_resource_id
@@ -109,23 +103,12 @@ end
 function DATA.forage_resource_set_icon(forage_resource_id, value)
     DATA.forage_resource_icon[forage_resource_id] = value
 end
----@param forage_resource_id forage_resource_id valid forage_resource id
----@return JOBTYPE handle 
-function DATA.forage_resource_get_handle(forage_resource_id)
-    return DCON.dcon_forage_resource_get_handle(forage_resource_id - 1)
-end
----@param forage_resource_id forage_resource_id valid forage_resource id
----@param value JOBTYPE valid JOBTYPE
-function DATA.forage_resource_set_handle(forage_resource_id, value)
-    DCON.dcon_forage_resource_set_handle(forage_resource_id - 1, value)
-end
 
 local fat_forage_resource_id_metatable = {
     __index = function (t,k)
         if (k == "name") then return DATA.forage_resource_get_name(t.id) end
         if (k == "description") then return DATA.forage_resource_get_description(t.id) end
         if (k == "icon") then return DATA.forage_resource_get_icon(t.id) end
-        if (k == "handle") then return DATA.forage_resource_get_handle(t.id) end
         return rawget(t, k)
     end,
     __newindex = function (t,k,v)
@@ -139,10 +122,6 @@ local fat_forage_resource_id_metatable = {
         end
         if (k == "icon") then
             DATA.forage_resource_set_icon(t.id, v)
-            return
-        end
-        if (k == "handle") then
-            DATA.forage_resource_set_handle(t.id, v)
             return
         end
         rawset(t, k, v)
@@ -159,52 +138,29 @@ end
 FORAGE_RESOURCE = {
     INVALID = 0,
     WATER = 1,
-    FRUIT = 2,
-    GRAIN = 3,
-    GAME = 4,
-    FUNGI = 5,
-    SHELL = 6,
-    FISH = 7,
-    WOOD = 8,
+    PLANT = 2,
+    GAME = 3,
+    FISH = 4,
+    WOOD = 5,
 }
 local index_forage_resource
 index_forage_resource = DATA.create_forage_resource()
 DATA.forage_resource_set_name(index_forage_resource, "Water")
 DATA.forage_resource_set_description(index_forage_resource, "water")
 DATA.forage_resource_set_icon(index_forage_resource, "droplets.png")
-DATA.forage_resource_set_handle(index_forage_resource, JOBTYPE.HAULING)
 index_forage_resource = DATA.create_forage_resource()
-DATA.forage_resource_set_name(index_forage_resource, "Fruit")
-DATA.forage_resource_set_description(index_forage_resource, "berries")
-DATA.forage_resource_set_icon(index_forage_resource, "berries-bowl.png")
-DATA.forage_resource_set_handle(index_forage_resource, JOBTYPE.FORAGER)
-index_forage_resource = DATA.create_forage_resource()
-DATA.forage_resource_set_name(index_forage_resource, "Grain")
-DATA.forage_resource_set_description(index_forage_resource, "seeds")
-DATA.forage_resource_set_icon(index_forage_resource, "wheat.png")
-DATA.forage_resource_set_handle(index_forage_resource, JOBTYPE.FARMER)
+DATA.forage_resource_set_name(index_forage_resource, "Plant")
+DATA.forage_resource_set_description(index_forage_resource, "plants")
+DATA.forage_resource_set_icon(index_forage_resource, "fruit-bowl.png")
 index_forage_resource = DATA.create_forage_resource()
 DATA.forage_resource_set_name(index_forage_resource, "Game")
 DATA.forage_resource_set_description(index_forage_resource, "game")
 DATA.forage_resource_set_icon(index_forage_resource, "bison.png")
-DATA.forage_resource_set_handle(index_forage_resource, JOBTYPE.HUNTING)
-index_forage_resource = DATA.create_forage_resource()
-DATA.forage_resource_set_name(index_forage_resource, "Fungi")
-DATA.forage_resource_set_description(index_forage_resource, "mushrooms")
-DATA.forage_resource_set_icon(index_forage_resource, "chanterelles.png")
-DATA.forage_resource_set_handle(index_forage_resource, JOBTYPE.CLERK)
-index_forage_resource = DATA.create_forage_resource()
-DATA.forage_resource_set_name(index_forage_resource, "Shell")
-DATA.forage_resource_set_description(index_forage_resource, "shellfish")
-DATA.forage_resource_set_icon(index_forage_resource, "oyster.png")
-DATA.forage_resource_set_handle(index_forage_resource, JOBTYPE.HAULING)
 index_forage_resource = DATA.create_forage_resource()
 DATA.forage_resource_set_name(index_forage_resource, "Fish")
 DATA.forage_resource_set_description(index_forage_resource, "fish")
 DATA.forage_resource_set_icon(index_forage_resource, "salmon.png")
-DATA.forage_resource_set_handle(index_forage_resource, JOBTYPE.LABOURER)
 index_forage_resource = DATA.create_forage_resource()
 DATA.forage_resource_set_name(index_forage_resource, "Wood")
 DATA.forage_resource_set_description(index_forage_resource, "timber")
 DATA.forage_resource_set_icon(index_forage_resource, "pine-tree.png")
-DATA.forage_resource_set_handle(index_forage_resource, JOBTYPE.ARTISAN)

@@ -1,2 +1,0 @@
-link many location tile location of warband
-link one warband warband

@@ -20,8 +20,8 @@ local function is_visible()
 		return false
 	end
 
-	local tile = LOCAL_TILE(player)
-	local province = LOCAL_PROVINCE(player)
+	local tile = POP_TILE(player)
+	local province = POP_PROVINCE(player)
 
 	if province == INVALID_ID then
 		return false
@@ -61,7 +61,7 @@ function inspector.draw(gamescene)
 
 	---@type pop_id
 	local player = WORLD.player_character
-	local province = LOCAL_PROVINCE(player)
+	local province = POP_PROVINCE(player)
 
 	local base = ut.BASE_HEIGHT
 
@@ -76,24 +76,24 @@ function inspector.draw(gamescene)
 	ui.image(ASSETS.images.settlement, settlement_image_rect)
 	ui.panel(settlement_image_rect, 0, true, false)
 
-	ib.text_button_to_province_tile(gamescene, LOCAL_TILE(player), settlement_name_rect, "")
+	ib.text_button_to_province_tile(gamescene, POP_TILE(player), settlement_name_rect, "")
 
 	local action_rect = actions_rect:subrect(0, 0, actions_rect.width * 0.8, actions_rect.height / 9, "center", "up")
 
-	if PROVINCE(player) == INVALID_ID then
+	if POP_PROVINCE(player) == INVALID_ID then
 		if ut.text_button("Enter", action_rect, "Enter the settlement") then
 			travel_effects.enter_settlement(player)
 		end
 	else
 		if ut.text_button("Leave", action_rect, "Leave the settlement") then
-			if LEADER_OF_WARBAND(player) == INVALID_ID then
+			if LEADER_OF_ESTATE(player) == INVALID_ID then
 				military_effects.gather_warband(player)
 			end
 			travel_effects.exit_settlement(player)
 		end
 	end
 
-	if PROVINCE(player) == INVALID_ID then
+	if POP_PROVINCE(player) == INVALID_ID then
 		action_rect.y = action_rect.y + action_rect.height
 		if ut.text_button("Raid", action_rect, "Raid the local settlement") then
 			military_effects.raid(player, false)

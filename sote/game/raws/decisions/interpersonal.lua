@@ -33,14 +33,14 @@ local function load()
 			if primary_target == root then
 				return false
 			end
-			if PROVINCE(primary_target) ~= PROVINCE(root) then
+			if POP_PROVINCE(primary_target) ~= POP_PROVINCE(root) then
 				return false
 			end
 			return true
 		end,
 		ai_target = function(root)
 
-			local p = PROVINCE(root)
+			local p = POP_PROVINCE(root)
 			if p == INVALID_ID then
 				return nil, false
 			end

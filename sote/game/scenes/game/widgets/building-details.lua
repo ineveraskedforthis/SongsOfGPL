@@ -50,15 +50,6 @@ return function (rect, building)
 	local realm = PROVINCE_REALM(province)
 	local building_type = DATA.building_get_current_type(building)
 	local method = DATA.building_type_get_production_method(building_type)
-	local inf = province_utils.get_infrastructure_efficiency(province)
-	local efficiency_from_infrastructure = math.min(1.5, 0.5 + 0.5 * math.sqrt(2 * inf))
-	local local_method_efficiency = production_method_utils.get_efficiency(method, province)
-	local foragers = DATA.province_get_foragers(province)
-	local foragers_limit = DATA.province_get_foragers_limit(province)
-	local forage_efficiency = 1
-	if DATA.production_method_get_foraging(method) then
-		forage_efficiency = dbm.foraging_efficiency(foragers_limit, foragers)
-	end
 
 	---@type pop_id
 	local worker = DATA.employment_get_worker(DATA.get_employment_from_building(building))

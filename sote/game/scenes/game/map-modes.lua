@@ -186,6 +186,46 @@ function mm.set_up_map_modes(game_thingy)
 			mmut.MAP_MODE_GRANULARITY.TILE,
 			mmut.MAP_MODE_UPDATES_TYPE.DYNAMIC
 		),
+		tile_forage_water = new_map_mode(
+			"Forageable Water (tile)",
+			"droplets.png",
+			"Shows foragable water per tile.",
+			ecology_map_modes.tile_forage_water,
+			mmut.MAP_MODE_GRANULARITY.TILE,
+			mmut.MAP_MODE_UPDATES_TYPE.DYNAMIC
+		),
+		tile_forage_plant = new_map_mode(
+			"Forageable Plants (tile)",
+			"fruit-bowl.png",
+			"Shows foragable plants per tile.",
+			ecology_map_modes.tile_forage_plant,
+			mmut.MAP_MODE_GRANULARITY.TILE,
+			mmut.MAP_MODE_UPDATES_TYPE.DYNAMIC
+		),
+		tile_forage_game = new_map_mode(
+			"Forageable Game (tile)",
+			"bison.png",
+			"Shows foragable game per tile.",
+			ecology_map_modes.tile_forage_game,
+			mmut.MAP_MODE_GRANULARITY.TILE,
+			mmut.MAP_MODE_UPDATES_TYPE.DYNAMIC
+		),
+		tile_forage_fish = new_map_mode(
+			"Forageable Fish (tile)",
+			"salmon.png",
+			"Shows foragable fish per tile.",
+			ecology_map_modes.tile_forage_fish,
+			mmut.MAP_MODE_GRANULARITY.TILE,
+			mmut.MAP_MODE_UPDATES_TYPE.DYNAMIC
+		),
+		tile_forage_wood = new_map_mode(
+			"Forageable Wood (tile)",
+			"pine-tree.png",
+			"Shows foragable wood per tile.",
+			ecology_map_modes.tile_forage_wood,
+			mmut.MAP_MODE_GRANULARITY.TILE,
+			mmut.MAP_MODE_UPDATES_TYPE.DYNAMIC
+		),
 		realms = new_map_mode(
 			"Realms",
 			"flying-flag.png",
@@ -400,6 +440,7 @@ function mm.set_up_map_modes(game_thingy)
 	game_thingy.map_mode_tabs.all = {
 		"elevation", "biomes", "plants", "koppen",
 		"realms", "population", "population_1000", "population_density", "plates", "rocks", "tile_carrying_capacity",
+		"tile_forage_water","tile_forage_plant","tile_forage_game","tile_forage_fish","tile_forage_wood",
 		"resources", "soil_texture", "soil_depth", "soil_organics", "soil_minerals",
 		"jan_rain", "jul_rain", "jan_temp", "jul_temp", "jan_flow", "jul_flow",
 		"province", "carrying_capacity", "realm_income", "local_income", "coastlines",

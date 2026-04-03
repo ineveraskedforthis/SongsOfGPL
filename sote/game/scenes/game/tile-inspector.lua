@@ -63,7 +63,7 @@ local function header_panel(gam, tile_id, panel)
 	local infra_panel = panel:subrect(0, base_unit, base_unit * 3, base_unit, "left", "up")
 	uit.generic_number_field(
 		"horizon-road.png",
-		province_utils.get_infrastructure_efficiency(province_id),
+		province_utils.get_infrastructure_efficiency(tile_id),
 		infra_panel,
 		"Local infrastructure efficiency",
 		uit.NUMBER_MODE.PERCENTAGE,
@@ -107,11 +107,7 @@ local function header_panel(gam, tile_id, panel)
 	character_panel.y = character_panel.y - character_panel.height
 	character_panel.x = character_panel.x + character_panel.width
 
-	local characters_count = 0
-
-	DATA.for_each_character_location_from_location(province_id, function (item)
-		characters_count = characters_count + 1
-	end)
+	local characters_count = province_utils.local_characters(province_id)
 
 	uit.generic_number_field(
 		"inner-self.png",
@@ -127,13 +123,13 @@ local function header_panel(gam, tile_id, panel)
 	uit.generic_number_field(
 		"barbute.png",
 		tabb.accumulate(
-			DATA.filter_warband_location_from_location(DATA.province_get_center(province_id), function (item)
+			DATA.filter_estate_location_from_tile(tile_id, function (item)
 				return true
 			end),
 			0,
 			function (a, k, v)
-				local warband = DATA.warband_location_get_warband(v)
-				return a + warband_utils.war_size(warband)
+				local estate = DATA.estate_location_get_estate(v)
+				return a + warband_utils.war_size(estate)
 			end
 		),
 		population_panel,
@@ -201,7 +197,7 @@ local function infrastructure_widget(gam, tile_id, panel)
 			function(rect)
 				uit.money_entry(
 					"Inf.: ",
-					province.infrastructure,
+					DATA.tile_get_infrastructure(tile_id),
 					rect,
 					"Local infrastructure"
 				)
@@ -209,7 +205,7 @@ local function infrastructure_widget(gam, tile_id, panel)
 			function(rect)
 				uit.money_entry(
 					"Inf. inv: ",
-					province.infrastructure_investment,
+					DATA.tile_get_infrastructure_investment(tile_id),
 					rect,
 					"Infrastructure investment"
 				)
@@ -217,15 +213,15 @@ local function infrastructure_widget(gam, tile_id, panel)
 			function(rect)
 				uit.money_entry(
 					"Req inf.: ",
-					province.infrastructure_needed,
+					DATA.tile_get_infrastructure_needed(tile_id),
 					rect,
 					"Required infrastructure"
 				)
 			end,
 			function(rect)
 				local sat = 0
-				if province.infrastructure_needed > 0 then
-					sat = province.infrastructure / province.infrastructure_needed
+				if DATA.tile_get_infrastructure_needed(tile_id) > 0 then
+					sat = DATA.tile_get_infrastructure(tile_id) / DATA.tile_get_infrastructure_needed(tile_id)
 				end
 				uit.data_entry_percentage(
 					"Inf. sat: ",
@@ -392,15 +388,15 @@ local function trade_widget(gam, tile_id, panel)
 		:grid(4)
 		:build()
 
-	local province_id = tile_utils.province(tile_id)
+	local province_id = TILE_PROVINCE(tile_id)
 	local province = DATA.fatten_province(province_id)
 
 	uit.generic_number_field(
 		"fruit-bowl.png",
-		province.foragers_limit,
+		DATA.tile_get_foragers_limit(tile_id),
 		layout:next(unit * 3.5, unit * 1),
-		"The carrying capacity of this province is determined by the amount of energy foragable. The total calories avialable in this province can support about " .. uit.to_fixed_point2(province.foragers_limit)
-			.." adult humans from foraging " .. province.size .." tiles.",
+		"The carrying capacity of this province is determined by the amount of energy foragable. The total calories avialable in this province can support about "
+			.. uit.to_fixed_point2(DATA.tile_get_foragers_limit(tile_id)) .." adult humans from foraging this tile.",
 		uit.NUMBER_MODE.BALANCE,
 		uit.NAME_MODE.ICON
 	)
@@ -416,108 +412,66 @@ local function trade_widget(gam, tile_id, panel)
 		uit.NAME_MODE.ICON
 	)
 
-	local foraging_efficiency = dbm.foraging_efficiency(province.foragers_limit, province.foragers)
-	uit.generic_number_field(
-		"basket.png",
-		foraging_efficiency,
-		layout:next(unit * 3.5, unit * 1),
-		"There are currently the equivalent of " .. uit.to_fixed_point2(province.foragers)
-			.. " adult human foragers collecting food full-time, pulling "
-			.. uit.to_fixed_point2(province.foragers / (province.foragers_limit > 0 and province.foragers_limit or 1) * 100).. "% of avaialable resources.",
-		uit.NUMBER_MODE.PERCENTAGE,
-		uit.NAME_MODE.ICON
-	)
-
-	local hydration_efficiency = dbm.foraging_efficiency(province.hydration * 0.5, province.foragers_water)
-	uit.generic_number_field(
-		"full-wood-bucket.png",
-		hydration_efficiency,
-		layout:next(unit * 3.5, unit * 1),
-		"There are currently the equivalent of " .. uit.to_fixed_point2(province.foragers_water)
-			.. " adult human foragers collecting water full-time, pulling "
-			.. uit.to_fixed_point2(province.foragers_water / province.hydration * 100).. "% of avaialable water.",
-		uit.NUMBER_MODE.PERCENTAGE,
-		uit.NAME_MODE.ICON
-	)
-
 	local province_size = DATA.province_get_size(province_id)
 
-	for i = 1, MAX_RESOURCES_IN_PROVINCE_INDEX - 1 do
-		local forage_case = DATA.province_get_foragers_targets_forage(province_id, i)
-
-		if forage_case == FORAGE_RESOURCE.INVALID then
-			break
+	for _, i in pairs(FORAGE_RESOURCE) do
+		if i ~= INVALID_ID then
+			local resource = DATA.tile_get_foragers_targets_resource(tile_id, i)
+			local amount = DATA.tile_get_foragers_targets_amount(tile_id, i)
+			local limit = DATA.tile_get_foragers_targets_limit(tile_id, i)
+			local efficiency = dbm.foraging_efficiency(limit,amount)
+			local name = DATA.forage_resource_get_name(resource)
+			local difference = math.max(0, limit - amount)
+			local tooltip = limit > 0 and "A total of " .. uit.to_fixed_point2(difference) .. " " .. name
+					.. " went unharvested last month from a total of " .. uit.to_fixed_point2(limit)
+					.. " units being harvested by the equivalent of " .. uit.to_fixed_point2(amount)
+					.. " adult human foragers"
+					.. "\n - The average adult human can expect to collect from " .. name
+					.. " at " .. uit.to_fixed_point2(efficiency*100) .. "% efficiency."
+				or "There are no forageable " .. name .. " in this tile."
+			uit.generic_number_field(
+				DATA.forage_resource_get_icon(resource),
+				difference,
+				layout:next(unit * 3.5, unit * 1),
+				tooltip,
+				uit.NUMBER_MODE.BALANCE,
+				uit.NAME_MODE.ICON
+			)
 		end
 
-		local required_job =  DATA.forage_resource_get_handle(forage_case)
-		local amount = DATA.province_get_foragers_targets_amount(province_id, i)
-		local output_good = DATA.province_get_foragers_targets_output_good(province_id, i)
-
-		if output_good == INVALID_ID then
-			break
-		end
-
-		local output_value = DATA.province_get_foragers_targets_output_value(province_id, i)
-
-		---@type number
-		local search_time = province_size / amount / 10
-		local efficiency = dbm.mean_race_job_efficiency(HUMAN, required_job)
-		local handle_time = 1 / efficiency
-
-		local total_time = search_time + handle_time
-
-		local name = DATA.forage_resource_get_name(forage_case)
-		local action = DATA.forage_resource_get_handle(forage_case)
-
-		local output_good_name = DATA.trade_good_get_name(output_good)
-
-		uit.generic_number_field(
-			DATA.forage_resource_get_icon(forage_case),
-			amount,
-			layout:next(unit * 3.5, unit * 1),
-			"The average adult human can expect to collect " .. uit.to_fixed_point2(1 / total_time) .. " units of "
-				.. name .. " " .. action
-				.. " for it full time from the total " .. uit.to_fixed_point2(amount)
-				.. " spread over of the province's " .. uit.to_fixed_point2(province.size)
-				.. " tiles.\n · Foraging one unit of " .. name
-				.. " produces:\n  · " .. output_good_name .. " (" .. uit.to_fixed_point2(output_value) .. ")" .. "\n · The output of " .. action .. " " .. name
-				.. " is further modified by a pop's racial job efficiencies, age, and needs satisfactions.",
-			uit.NUMBER_MODE.BALANCE,
-			uit.NAME_MODE.ICON
-		)
 	end
 
 	---@type string
-	local resource_string = ""
-	local resource_tooltip = "There is no special resource on this tile."
-	local resource_icon = "uncertainty.png"
-	local has_resource = false
-	for i = 1, MAX_RESOURCES_IN_PROVINCE_INDEX - 1 do
-		local resource = DATA.province_get_local_resources_resource(province_id, i)
-		if resource == INVALID_ID then
-			break
-		end
-		local name = DATA.resource_get_name(resource)
-		has_resource = true
+	-- local resource_string = ""
+	-- local resource_tooltip = "There is no special resource on this tile."
+	-- local resource_icon = "uncertainty.png"
+	-- local has_resource = false
+	-- for i = 1, MAX_RESOURCES_IN_PROVINCE_INDEX - 1 do
+	-- 	local resource = DATA.province_get_local_resources_resource(province_id, i)
+	-- 	if resource == INVALID_ID then
+	-- 		break
+	-- 	end
+	-- 	local name = DATA.resource_get_name(resource)
+	-- 	has_resource = true
 
-		---@type string
-		resource_string = resource_string .. name .. ", "
-	end
+	-- 	---@type string
+	-- 	resource_string = resource_string .. name .. ", "
+	-- end
 
-	if has_resource then
-		-- resource_string = resource_string:sub(1, -3)
-		resource_tooltip = "This tile has sources of " .. resource_string .. "."
-	else
-		resource_string = "n/a"
-	end
+	-- if has_resource then
+	-- 	-- resource_string = resource_string:sub(1, -3)
+	-- 	resource_tooltip = "This tile has sources of " .. resource_string .. "."
+	-- else
+	-- 	resource_string = "n/a"
+	-- end
 
-	uit.generic_string_field(
-		"Res.",
-		resource_string,
-		layout:next(unit * 3.5 * 4 + 15, unit * 1),
-		resource_tooltip,
-		uit.NAME_MODE.NAME
-	)
+	-- uit.generic_string_field(
+	-- 	"Res.",
+	-- 	resource_string,
+	-- 	layout:next(unit * 3.5 * 4 + 15, unit * 1),
+	-- 	resource_tooltip,
+	-- 	uit.NAME_MODE.NAME
+	-- )
 end
 
 ---comment
@@ -786,10 +740,13 @@ local function buildings_construction_tab(gam, tile_id, panel)
 	local amount = 0
 
 	DATA.for_each_building_type(function (item)
-		if DATA.province_get_buildable_buildings(province_id, item) == 1 then
-			table.insert(building_types, item)
-			amount = amount + 1
-		end
+		DATA.for_each_estate_location_from_tile(tile_id,function (estate_location)
+			local estate = DATA.estate_location_get_estate(estate_location)
+			if not building_types[item] and DATA.estate_get_buildable_buildings(estate, item) == 1 then
+				table.insert(building_types, item)
+				amount = amount + 1
+			end
+		end)
 	end)
 
 	re.building_construction_scrollbar = uit.scrollview(
@@ -845,21 +802,24 @@ local function buildings_view_tab(gam, tile_id, rect)
 	rect.y = rect.y + base_unit
 
 	if re.building_stacks then
-		-- Show buildings at stacks
+		-- Show buildings as stacks
 		---@type table<building_type_id, number>
 		local stacks = {}
 		local size = 0
-		DATA.for_each_estate_location_from_province(province_id, function (item)
-			local estate = DATA.estate_location_get_estate(item)
-			DATA.for_each_building_estate_from_estate(estate, function (building_estate)
-				local building = DATA.building_estate_get_building(building_estate)
-				local building_type = DATA.building_get_current_type(building)
-				if stacks[building_type] == nil then
-					stacks[building_type] = 1
-					size = size + 1
-				else
-					stacks[building_type] = stacks[building_type] + 1
-				end
+		DATA.for_each_tile_province_membership_from_province(province_id, function (membership)
+			local tile = DATA.tile_province_membership_get_tile(membership)
+			DATA.for_each_estate_location_from_tile(tile, function (item)
+				local estate = DATA.estate_location_get_estate(item)
+				DATA.for_each_building_estate_from_estate(estate, function (building_estate)
+					local building = DATA.building_estate_get_building(building_estate)
+					local building_type = DATA.building_get_current_type(building)
+					if stacks[building_type] == nil then
+						stacks[building_type] = 1
+						size = size + 1
+					else
+						stacks[building_type] = stacks[building_type] + 1
+					end
+				end)
 			end)
 		end)
 
@@ -889,10 +849,15 @@ local function buildings_view_tab(gam, tile_id, rect)
 		-- Show individual buildings
 		re.buildings_scrollbar = re.buildings_scrollbar or 0
 		local amount = 0
-		local estates = DATA.filter_estate_location_from_province(province_id, function (item)
-			amount = amount + 1
-			return true
-		end)
+		local estates = DATA.filter_estate_location(
+			function (item)
+				local location = DATA.estate_location_get_tile(item)
+				if TILE_PROVINCE(location) == province_id then
+					amount = amount + 1
+					return true
+				end
+				return false
+			end)
 
 		re.buildings_scrollbar = uit.scrollview(rect, function(number, rect)
 			if number > 0 and number <= amount then
@@ -964,22 +929,22 @@ local function technology_tab(gam, tile_id, panel)
 	local technologies = {}
 	local total = 0
 
-	DATA.for_each_technology(function (item)
-		if DATA.province_get_technologies_present(province, item) == 1 then
-			table.insert(technologies, item)
-			total = total + 1
-		end
-	end)
-
 	---@type technology_id[]
 	local technologies_potential = {}
 	local total_potential = 0
 
 	DATA.for_each_technology(function (item)
-		if DATA.province_get_technologies_researchable(province, item) == 1 then
-			table.insert(technologies_potential, item)
-			total_potential = total_potential + 1
-		end
+		DATA.for_each_estate_location_from_tile(tile_id, function (location)
+			local estate = DATA.estate_location_get_estate(location)
+			if DATA.estate_get_technologies_present(estate, item) == 1 then
+				table.insert(technologies, item)
+				total = total + 1
+			end
+			if DATA.estate_get_technologies_researchable(estate, item) == 1 then
+				table.insert(technologies_potential, item)
+				total_potential = total_potential + 1
+			end
+		end)
 	end)
 
 	uit.rows(
@@ -1181,11 +1146,12 @@ function re.draw(gam)
 								gam,
 								tab_content,
 								tabb.map_array(
-									DATA.filter_array_pop_location_from_location(
-										province,
-										function (item) return true end
+									DATA.filter_estate_unit(
+										function (item)
+											return province == ESTATE_PROVINCE(DATA.estate_unit_get_estate(item))
+										end
 									),
-									DATA.character_location_get_character
+									DATA.estate_unit_get_pop
 								),
 								re.cached_character_local_state
 							)()
@@ -1199,13 +1165,12 @@ function re.draw(gam)
 								gam,
 								tab_content,
 								tabb.map_array(
-									DATA.filter_array_home_from_home(
-										province,
+									DATA.filter_home(
 										function (item)
-											return true
+											return province == ESTATE_PROVINCE(DATA.home_get_estate(item))
 										end
 									),
-									DATA.pop_location_get_pop
+									DATA.home_get_pop
 								),
 								re.cached_pop_home_state
 							)()
@@ -1215,19 +1180,18 @@ function re.draw(gam)
 						text = "CHAR",
 						tooltip = "Notable characters present in " .. PROVINCE_NAME(province) .. ".",
 						closure = function()
-							re.cached_pop_guest_state = require "game.scenes.game.widgets.character-list" (
+							re.cached_pop_char_state = require "game.scenes.game.widgets.character-list" (
 								gam,
 								tab_content,
 								tabb.map_array(
-									DATA.filter_array_character_location_from_location(
-										province,
+									DATA.filter_character_location(
 										function (item)
-											return true
+											return province == ESTATE_PROVINCE(DATA.character_location_get_estate(item))
 										end
 									),
 									DATA.character_location_get_character
 								),
-								re.cached_pop_guest_state
+								re.cached_pop_char_state
 							)()
 						end
 					},
@@ -1239,16 +1203,14 @@ function re.draw(gam)
 								gam,
 								tab_content,
 								tabb.map_array(
-									DATA.filter_array_pop_location_from_location(
-										province,
+									DATA.filter_estate_unit(
 										function (item)
-											local character = DATA.pop_location_get_pop(item)
-											local home_location = DATA.get_home_from_pop(character)
-											local home_province = DATA.home_get_home(home_location)
-											return home_province ~= province
+											local pop = DATA.estate_unit_get_pop(item)
+											return province ~= ESTATE_PROVINCE(HOME(pop))
+												and province == POP_PROVINCE(pop)
 										end
 									),
-									DATA.character_location_get_character
+									DATA.estate_unit_get_pop
 								),
 								re.cached_pop_guest_state
 							)()

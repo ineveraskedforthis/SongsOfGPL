@@ -76,7 +76,7 @@ function load()
 					end)
 
 					local pops = 0
-					DATA.for_each_pop_location_from_location(associated_data.origin_province, function (item)
+					DATA.for_each_estate_unit_from_estate(associated_data.origin_province, function (item)
 						pops = pops + 1
 					end)
 
@@ -89,19 +89,19 @@ function load()
 			end
 
 			-- populate temporary tables with not drafted pops	---collect colonization information
-			---@param province any
+			---@param estate estate_id
 			---@return table<POP, POP> valid_family_units
 			---@return integer  valid_family_count
-			local function valid_home_family_units(province)
+			local function valid_home_family_units(estate)
 				local family_units = {}
 
-				DATA.for_each_pop_location_from_location(province, function (item)
-					local pop = DATA.pop_location_get_pop(item)
+				DATA.for_each_estate_unit_from_estate(estate, function (item)
+					local pop = DATA.estate_unit_get_pop(item)
 					local home = DATA.get_home_from_pop(pop)
-					local home_province = DATA.home_get_home(home)
+					local home_estate = DATA.home_get_estate(home)
 					local race = F_RACE(pop)
 					if
-						home_province == province
+						home_estate == estate
 						and AGE_YEARS(pop) >= race.teen_age
 						and AGE_YEARS(pop) < race.middle_age
 					then
@@ -150,7 +150,7 @@ function load()
 			end
 
 			--disolve warband to return warriors to home province before transfering character
-			if LEADER_OF_WARBAND(expedition_leader) then
+			if LEADER_OF_ESTATE(expedition_leader) then
 				require "game.raws.effects.military".dissolve_warband(expedition_leader)
 			end
 
@@ -520,7 +520,7 @@ function load()
 
 			local raider = associated_data.raider
 
-			local province = LOCAL_PROVINCE(raider)
+			local province = POP_PROVINCE(raider)
 			local realm = PROVINCE_REALM(province)
 
 			if realm == INVALID_ID then
@@ -530,7 +530,7 @@ function load()
 			end
 
 			-- Battle time!
-			local army = {LEADER_OF_WARBAND(raider)}
+			local army = {LEADER_OF_ESTATE(raider)}
 
 			-- spot test
 			-- it's an open attack, so our visibility is multiplied by 10

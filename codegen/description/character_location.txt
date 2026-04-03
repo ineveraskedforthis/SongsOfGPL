@@ -1,2 +1,2 @@
-link many location province location of character
+link many estate estate location of character
 link one character pop

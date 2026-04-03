@@ -5,4 +5,4 @@ b float
 language language_id
 traditional_units float[unit_type_id] -- Defines "traditional" ratios for units recruited from this culture.
 traditional_militarization float A fraction of the society that cultures will try to put in military
-traditional_forager_targets float[FORAGE_RESOURCE] a culture's prefered foraging targets
+traditional_forager_targets float[production_method_id] a culture's prefered foraging targets

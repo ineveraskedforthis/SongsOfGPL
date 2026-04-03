@@ -83,7 +83,7 @@ function inspector.draw(gam)
 		end
 
 		DATA.for_each_building_type(function (item)
-			local potential = DATA.province_get_buildable_buildings(PROVINCE(character), item) == 1
+			local potential = DATA.estate_get_buildable_buildings(POP_ESTATE(character), item) == 1
 			if potential then
 				if not seen[item] then
 					table.insert(available_buildings, item)
@@ -92,7 +92,7 @@ function inspector.draw(gam)
 					seen[item] = true
 				end
 				if province_utils.can_build(
-					PROVINCE(character),
+					POP_PROVINCE(character),
 					funds, item, overseer, public_flag
 				) then
 					buildable[item] = true

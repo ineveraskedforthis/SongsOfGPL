@@ -1,9 +1,10 @@
 name;action_string;time_used;icon
-idle;idle;0.25;guards.png
+idle;idle;0.0;guards.png
 raiding;raiding;0.5;stone-spear.png
-preparing_raid;preparing a raid;0.5;minions.png
+preparing_raid;preparing a raid;0.25;minions.png
 preparing_patrol;preparing to patrol;0.25;ages.png
 patrol;patrolling;0.5;round-shield.png
-attacking;attacking;0.5;hammer-drop.png
+attacking;attacking;0.5;hammer-drop.pngs
 traveling;traveling;0.5;horizon-road.png
 off_duty;off duty;0.0;shrug.png
+forage;foraging;0.25;basket.png

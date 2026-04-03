@@ -12,7 +12,38 @@ end
 function ec.tile_carrying_capacity()
 	local cc = require "game.ecology.carrying-capacity".get_tile_carrying_capacity
 	ut.simple_hue_map_mode(function(tile_id)
-		return cc(tile_id) / 0.7
+		return cc(tile_id) / 100
+	end)
+end
+
+function ec.tile_forage_water()
+	local forage_water = require "game.ecology.carrying-capacity".get_tile_forage_water
+	ut.simple_hue_map_mode(function(tile_id)
+		return forage_water(tile_id) / 30
+	end)
+end
+function ec.tile_forage_plant()
+	local forage_plant = require "game.ecology.carrying-capacity".get_tile_forage_plant
+	ut.simple_hue_map_mode(function(tile_id)
+		return forage_plant(tile_id) / 10
+	end)
+end
+function ec.tile_forage_game()
+	local forage_game = require "game.ecology.carrying-capacity".get_tile_forage_game
+	ut.simple_hue_map_mode(function(tile_id)
+		return forage_game(tile_id) / 10
+	end)
+end
+function ec.tile_forage_fish()
+	local forage_fish = require "game.ecology.carrying-capacity".get_tile_forage_fish
+	ut.simple_hue_map_mode(function(tile_id)
+		return forage_fish(tile_id) / 10
+	end)
+end
+function ec.tile_forage_wood()
+	local forage_wood = require "game.ecology.carrying-capacity".get_tile_forage_wood
+	ut.simple_hue_map_mode(function(tile_id)
+		return forage_wood(tile_id) / 10
 	end)
 end
 

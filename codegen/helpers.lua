@@ -1,6 +1,6 @@
 --- Helper functions to reduce key presses to type names of common wrappers
 
-CLICK_STRING = "\nClick here to learn more!"
+CLICK_STRING = "\nClick here to open inspector view!"
 OBSERVER_BUTTON_TOOLTIP = "Observers cannot interact with the world!"
 
 ---@enum AI_GOAL
@@ -211,30 +211,39 @@ function JOB_EFFICIENCY(pop, jobtype)
 	return DCON.job_efficiency(pop,jobtype)
 end
 
--- TODO UNIFY LOCATION STORAGE
----Returns province of a pop
+---Returns estate of a pop
 ---@param pop_id pop_id
----@return province_id
-function PROVINCE(pop_id)
-	-- assume that pop has location?
-	local location_pop = DATA.pop_location_get_location(DATA.get_pop_location_from_pop(pop_id))
-	local location_character = DATA.character_location_get_location(DATA.get_character_location_from_character(pop_id))
-
-	if location_character ~= INVALID_ID then
-		return location_character
-	end
-	if location_pop ~= INVALID_ID then
-		return location_pop
-	end
-
-	return INVALID_ID
+---@return estate_id
+function POP_ESTATE(pop_id)
+	return DATA.estate_unit_get_estate(DATA.get_estate_unit_from_pop(pop_id))
 end
 
----commenting
+---Returns current tile of a pop
+---@param pop_id pop_id
+---@return province_id
+function POP_TILE(pop_id)
+	return ESTATE_TILE(POP_ESTATE(pop_id))
+end
+
+---Returns current province of a pop
+---@param pop_id pop_id
+---@return province_id
+function POP_PROVINCE(pop_id)
+	return TILE_PROVINCE(POP_TILE(pop_id))
+end
+
+---returns current tile of estate
+---@param estate_id estate_id
+---@return tile_id
+function ESTATE_TILE(estate_id)
+	return DATA.estate_location_get_tile(DATA.get_estate_location_from_estate(estate_id))
+end
+
+---returns current province of estate
 ---@param estate_id estate_id
 ---@return province_id
 function ESTATE_PROVINCE(estate_id)
-	return DATA.estate_location_get_province(DATA.get_estate_location_from_estate(estate_id))
+	return TILE_PROVINCE(ESTATE_TILE(estate_id))
 end
 
 ---commenting
@@ -267,10 +276,10 @@ function SAVINGS(pop_id)
 end
 
 ---commenting
----@param warband_id warband_id|`INVALID_ID`
+---@param estate_id estate_id|`INVALID_ID`
 ---@return number
-function WARBAND_SAVINGS(warband_id)
-	return DATA.warband_get_treasury(warband_id)
+function ESTATE_SAVINGS(estate_id)
+	return DATA.estate_get_savings(estate_id)
 end
 
 ---commenting
@@ -292,11 +301,11 @@ end
 
 ---Returns province of a pop
 ---@param pop_id pop_id
----@return province_id
+---@return estate_id
 function HOME(pop_id)
 	-- assume that pop has location?
 	local location_pop = DATA.get_home_from_pop(pop_id)
-	return DATA.home_get_home(location_pop)
+	return DATA.home_get_estate(location_pop)
 end
 
 ---Returns parent of a pop
@@ -324,73 +333,10 @@ function REALM(pop_id)
 	return DATA.realm_pop_get_realm(pop_realm)
 end
 
----@param pop_id pop_id
----@return tile_id
-function LOCAL_TILE(pop_id)
-	local province = PROVINCE(pop_id)
-	if province ~= INVALID_ID then
-		return DATA.province_get_center(province)
-	end
-
-	local tile = (WARBAND_TILE(LEADER_OF_WARBAND(pop_id)))
-	if tile ~= INVALID_ID then
-		return tile
-	end
-
-	tile = (WARBAND_TILE(COMMANDER_OF_WARBAND(pop_id)))
-	if tile ~= INVALID_ID then
-		return tile
-	end
-
-	tile = (WARBAND_TILE(RECRUITER_OF_WARBAND(pop_id)))
-	if tile ~= INVALID_ID then
-		return tile
-	end
-
-	tile = (WARBAND_TILE(UNIT_OF(pop_id)))
-	if tile ~= INVALID_ID then
-		return tile
-	end
-
-	return INVALID_ID
-end
-
----commenting
----@param pop_id pop_id
----@return province_id
-function LOCAL_PROVINCE(pop_id)
-	local province = PROVINCE(pop_id)
-	if province ~= INVALID_ID then
-		return province
-	end
-
-	province = TILE_PROVINCE(WARBAND_TILE(LEADER_OF_WARBAND(pop_id)))
-	if province ~= INVALID_ID then
-		return province
-	end
-
-	province = TILE_PROVINCE(WARBAND_TILE(COMMANDER_OF_WARBAND(pop_id)))
-	if province ~= INVALID_ID then
-		return province
-	end
-
-	province = TILE_PROVINCE(WARBAND_TILE(RECRUITER_OF_WARBAND(pop_id)))
-	if province ~= INVALID_ID then
-		return province
-	end
-
-	province = TILE_PROVINCE(WARBAND_TILE(UNIT_OF(pop_id)))
-	if province ~= INVALID_ID then
-		return province
-	end
-
-	return INVALID_ID
-end
-
 ---Returns local realm of a pop
 ---@param pop_id pop_id
 function LOCAL_REALM(pop_id)
-	local province = PROVINCE(pop_id)
+	local province = POP_PROVINCE(pop_id)
 	local realm_membership = DATA.get_realm_provinces_from_province(province)
 	return DATA.realm_provinces_get_realm(realm_membership)
 end
@@ -492,10 +438,10 @@ end
 ---@return number work_time
 function POP_TIME(pop_id)
 	local free_time = DCON.pop_free_time(pop_id)
-	local warband_time = DCON.pop_warband_time(pop_id,free_time)
-	local forage_time = DCON.pop_forage_time(pop_id,free_time,warband_time)
-	local work_time = DCON.pop_work_time(pop_id,free_time,warband_time,forage_time)
-	return free_time,warband_time,forage_time,work_time
+	local travel_time = DCON.pop_travel_time(pop_id,free_time)
+	local forage_time = DCON.pop_forage_time(pop_id,free_time,travel_time)
+	local work_time = DCON.pop_work_time(pop_id,free_time,travel_time,forage_time)
+	return free_time,travel_time,forage_time,work_time
 end
 
 ---@param pop_id pop_id
@@ -540,53 +486,37 @@ function LEADER(realm)
 end
 
 ---commenting
----@param warband warband_id
+---@param estate estate_id
 ---@return pop_id
-function WARBAND_LEADER(warband)
-	local leadership = DATA.get_warband_leader_from_warband(warband)
-	return DATA.warband_leader_get_leader(leadership)
+function ESTATE_LEADER(estate)
+	local leadership = DATA.get_estate_leader_from_estate(estate)
+	return DATA.estate_leader_get_leader(leadership)
 end
 
----@param warband warband_id
+---@param estate estate_id
 ---@return pop_id
-function WARBAND_RECRUITER(warband)
-	local leadership = DATA.get_warband_recruiter_from_warband(warband)
-	return DATA.warband_recruiter_get_recruiter(leadership)
-end
-
----commenting
----@param warband warband_id
----@return pop_id
-function WARBAND_COMMANDER(warband)
-	local leadership = DATA.get_warband_commander_from_warband(warband)
-	return DATA.warband_commander_get_commander(leadership)
+function ESTATE_RECRUITER(estate)
+	local leadership = DATA.get_estate_recruiter_from_estate(etsate)
+	return DATA.estate_recruiter_get_recruiter(leadership)
 end
 
 ---commenting
----@param realm realm_id
----@return warband_id
-function GUARD(realm)
-	local guard = DATA.get_realm_guard_from_realm(realm)
-	return DATA.realm_guard_get_guard(guard)
+---@param estate estate_id
+---@return pop_id
+function ESTATE_COMMANDER(estate)
+	local leadership = DATA.get_estate_commander_from_estate(estate)
+	return DATA.estate_commander_get_commander(leadership)
 end
 
 ---commenting
 ---@param leader pop_id
----@return realm_id
-function LEADER_OF(leader)
-	local leadership = DATA.get_realm_leadership_from_leader(leader)
-	return DATA.realm_leadership_get_warband(leadership)
-end
-
----commenting
----@param leader pop_id
----@return warband_id
-function LEADER_OF_WARBAND(leader)
+---@return estate_id
+function LEADER_OF_ESTATE(leader)
 	if leader == INVALID_ID then
 		return INVALID_ID
 	end
-	local leadership = DATA.get_warband_leader_from_leader(leader)
-	return DATA.warband_leader_get_warband(leadership)
+	local leadership = DATA.get_estate_leader_from_leader(leader)
+	return DATA.estate_leader_get_estate(leadership)
 end
 
 
@@ -596,11 +526,6 @@ function IN_SETTLEMENT(party)
 	return DATA.warband_get_in_settlement(party)
 end
 
----@param warband warband_id
-function WARBAND_TILE(warband)
-	return DATA.warband_location_get_location(DATA.get_warband_location_from_warband(warband))
-end
-
 ---@param tile tile_id
 function TILE_PROVINCE(tile)
 	return DATA.tile_province_membership_get_province(DATA.get_tile_province_membership_from_tile(tile))
@@ -608,33 +533,33 @@ end
 
 ---commenting
 ---@param leader pop_id
----@return warband_id
-function RECRUITER_OF_WARBAND(leader)
-	local leadership = DATA.get_warband_recruiter_from_recruiter(leader)
-	return DATA.warband_recruiter_get_warband(leadership)
+---@return estate_id
+function RECRUITER_OF_ESTATE(leader)
+	local leadership = DATA.get_estate_recruiter_from_recruiter(leader)
+	return DATA.estate_recruiter_get_estate(leadership)
 end
 
 ---@param leader pop_id
----@return warband_id
-function COMMANDER_OF_WARBAND(leader)
-	local leadership = DATA.get_warband_commander_from_commander(leader)
-	return DATA.warband_commander_get_warband(leadership)
+---@return estate_id
+function COMMANDER_OF_ESTATE(leader)
+	local leadership = DATA.get_estate_commander_from_commander(leader)
+	return DATA.estate_commander_get_estate(leadership)
 end
 
 ---commenting
 ---@param unit pop_id
----@return warband_id
+---@return estate_id
 function UNIT_OF(unit)
-	local unitship = DATA.get_warband_unit_from_unit(unit)
-	return DATA.warband_unit_get_warband(unitship)
+	local unitship = DATA.get_estate_unit_from_pop(unit)
+	return DATA.estate_unit_get_estate(unitship)
 end
 
 ---commenting
 ---@param unit pop_id
 ---@return unit_type_id
 function UNIT_TYPE_OF(unit)
-	local unitship = DATA.get_warband_unit_from_unit(unit)
-	return DATA.warband_unit_get_type(unitship)
+	local unitship = DATA.get_estate_unit_from_pop(unit)
+	return DATA.estate_unit_get_type(unitship)
 end
 
 ---@param pop_id pop_id
@@ -672,10 +597,10 @@ function PROVINCE_NAME(province_id)
 end
 
 ---commenting
----@param warband_id warband_id
+---@param estate_id estate_id
 ---@return string
-function WARBAND_NAME(warband_id)
-	return DATA.warband_get_name(warband_id)
+function ESTATE_NAME(estate_id)
+	return DATA.estate_get_name(estate_id)
 end
 
 ---commenting

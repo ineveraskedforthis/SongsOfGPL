@@ -116,7 +116,7 @@ return function ()
 					local known_buy_price = DATA.pop_get_price_belief_buy(root, good)
 					local greed = character_values.profit_desire(root)
 
-					local stockpile = DATA.province_get_local_storage(PROVINCE(root), good)
+					local stockpile = DATA.province_get_local_storage(POP_PROVINCE(root), good)
 
 					if (target_sell_price > known_sell_price * (1.0 + greed)) and (stockpile > 5) then -- we want to sell there
 						trade_profits = trade_profits + target_sell_price - known_sell_price

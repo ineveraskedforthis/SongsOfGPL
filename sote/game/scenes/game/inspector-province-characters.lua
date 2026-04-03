@@ -46,7 +46,10 @@ function window.draw(game)
     panel.height = panel.height - base_unit
 
     local characters = tabb.map_array(
-        DATA.get_character_location_from_location(province),
+        DATA.filter_character_location(function (item)
+            local estate = DATA.character_location_get_estate(item)
+            return ESTATE_PROVINCE(estate) == province
+        end),
         DATA.character_location_get_character
     )
 

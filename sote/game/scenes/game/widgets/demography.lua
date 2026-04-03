@@ -15,12 +15,18 @@ local function demography(provinces, ui_panel, collapsed)
         ---@type table<Race, number>
         local counts = {}
         for _, province in pairs(provinces) do
-            DATA.for_each_pop_location_from_location(province, function (item)
-                local pop = DATA.pop_location_get_pop(item)
-                local race = DATA.pop_get_race(pop)
-                assert(race ~= INVALID_ID)
-                local old = counts[race] or 0
-                counts[race] = old + 1
+            DATA.for_each_tile_province_membership_from_province(province, function (membership)
+                local tile = DATA.tile_province_membership_get_tile(membership)
+                DATA.for_each_estate_location_from_tile(tile, function (location)
+                    local estate = DATA.estate_location_get_estate(location)
+                    DATA.for_each_estate_unit_from_estate(estate, function (item)
+                        local pop = DATA.estate_unit_get_pop(item)
+                        local race = DATA.pop_get_race(pop)
+                        assert(race ~= INVALID_ID)
+                        local old = counts[race] or 0
+                        counts[race] = old + 1
+                    end)
+                end)
             end)
         end
 
@@ -43,11 +49,17 @@ local function demography(provinces, ui_panel, collapsed)
         ---@type table<culture_id, number>
         local counts = {}
         for _, province in pairs(provinces) do
-            DATA.for_each_pop_location_from_location(province, function (item)
-                local pop = DATA.pop_location_get_pop(item)
-                local culture = DATA.pop_get_culture(pop)
-                local old = counts[culture] or 0
-                counts[culture] = old + 1
+            DATA.for_each_tile_province_membership_from_province(province, function (membership)
+                local tile = DATA.tile_province_membership_get_tile(membership)
+                DATA.for_each_estate_location_from_tile(tile, function (location)
+                    local estate = DATA.estate_location_get_estate(location)
+                    DATA.for_each_estate_unit_from_estate(estate, function (item)
+                        local pop = DATA.estate_unit_get_pop(item)
+                        local culture = DATA.pop_get_culture(pop)
+                        local old = counts[culture] or 0
+                        counts[culture] = old + 1
+                    end)
+                end)
             end)
         end
 
@@ -70,11 +82,17 @@ local function demography(provinces, ui_panel, collapsed)
         ---@type table<faith_id, number>
         local counts = {}
         for _, province in pairs(provinces) do
-            DATA.for_each_pop_location_from_location(province, function (item)
-                local pop = DATA.pop_location_get_pop(item)
-                local faith = DATA.pop_get_faith(pop)
-                local old = counts[faith] or 0
-                counts[faith] = old + 1
+            DATA.for_each_tile_province_membership_from_province(province, function (membership)
+                local tile = DATA.tile_province_membership_get_tile(membership)
+                DATA.for_each_estate_location_from_tile(tile, function (location)
+                    local estate = DATA.estate_location_get_estate(location)
+                    DATA.for_each_estate_unit_from_estate(estate, function (item)
+                        local pop = DATA.estate_unit_get_pop(item)
+                        local faith = DATA.pop_get_faith(pop)
+                        local old = counts[faith] or 0
+                        counts[faith] = old + 1
+                    end)
+                end)
             end)
         end
 
@@ -103,33 +121,39 @@ local function demography(provinces, ui_panel, collapsed)
         counts[WARRIORS] = 0
 
         for _, province in pairs(provinces) do
-            DATA.for_each_pop_location_from_location(province, function (item)
-                local pop = DATA.pop_location_get_pop(item)
-                local employment = DATA.get_employment_from_worker(pop)
-                local employer = DATA.employment_get_building(employment)
-                local job = DATA.employment_get_job(employment)
-                local age = AGE_YEARS(pop)
-                local race = DATA.pop_get_race(pop)
-                local teen_age = DATA.race_get_teen_age(race)
-                if employer ~= INVALID_ID then
-                    if counts[job] then
-                        counts[job] = counts[job] + 1
-                    else
-                        counts[job] = 1
-                    end
-                else
-                    if age > teen_age then
-                        local warband_membership = DATA.get_warband_unit_from_unit(pop)
-                        local warband = DATA.warband_unit_get_warband(warband_membership)
-                        if warband ~= INVALID_ID then
-                            counts[WARRIORS] = counts[WARRIORS] + 1
+            DATA.for_each_tile_province_membership_from_province(province, function (membership)
+                local tile = DATA.tile_province_membership_get_tile(membership)
+                DATA.for_each_estate_location_from_tile(tile, function (location)
+                    local estate = DATA.estate_location_get_estate(location)
+                    DATA.for_each_estate_unit_from_estate(estate, function (item)
+                        local pop = DATA.estate_unit_get_pop(item)
+                        local employment = DATA.get_employment_from_worker(pop)
+                        local employer = DATA.employment_get_building(employment)
+                        local job = DATA.employment_get_job(employment)
+                        local age = AGE_YEARS(pop)
+                        local race = DATA.pop_get_race(pop)
+                        local teen_age = DATA.race_get_teen_age(race)
+                        if employer ~= INVALID_ID then
+                            if counts[job] then
+                                counts[job] = counts[job] + 1
+                            else
+                                counts[job] = 1
+                            end
                         else
-                            counts[UNEMPLOYED] = counts[UNEMPLOYED] + 1
+                            if age > teen_age then
+                                local estate_unit = DATA.get_estate_unit_from_pop(pop)
+                                local unit = DATA.estate_unit_get_type(estate_unit)
+                                if unit == UNIT_TYPE.WARRIOR then
+                                    counts[WARRIORS] = counts[WARRIORS] + 1
+                                else
+                                    counts[UNEMPLOYED] = counts[UNEMPLOYED] + 1
+                                end
+                            else
+                                counts[CHILDREN] = counts[CHILDREN] + 1
+                            end
                         end
-                    else
-                        counts[CHILDREN] = counts[CHILDREN] + 1
-                    end
-                end
+                    end)
+                end)
             end)
         end
 

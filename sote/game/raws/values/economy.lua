@@ -17,8 +17,8 @@ end
 function eco_values.realm_independence_price(realm)
     local total = 0
     local capitol = DATA.realm_get_capitol(realm)
-    for _, pop_location in pairs(DATA.get_pop_location_from_location(capitol)) do
-        local pop = DATA.pop_location_get_pop(pop_location)
+    for _, estate_unit in pairs(DATA.get_estate_unit_from_estate(capitol)) do
+        local pop = DATA.estate_unit_get_pop(estate_unit)
         total = total + DATA.pop_get_savings(pop)
     end
     return total * 0.5 + 50
@@ -223,21 +223,21 @@ function eco_values.amount_of_workers(building)
 end
 
 ---Returns total food supply from warband
----@param party warband_id
+---@param estate estate_id
 ---@return number
-function eco_values.get_supply_available(party)
-	return eco_values.available_use_case_for_party(party, CALORIES_USE_CASE)
+function eco_values.get_supply_available(estate)
+	return eco_values.available_use_case_for_estate(estate, CALORIES_USE_CASE)
 end
 ---Returns available units for satisfying a use case from pop inventory
----@param party warband_id
+---@param estate estate_id
 ---@param use_case use_case_id
 ---@return number
-function eco_values.available_use_case_for_party(party, use_case)
+function eco_values.available_use_case_for_estate(estate, use_case)
 	local supply = 0
     DATA.for_each_use_weight_from_use_case(use_case, function(item)
 		local good = DATA.use_weight_get_trade_good(item)
 		local weight = DATA.use_weight_get_weight(item)
-		local good_in_inventory = DATA.warband_get_inventory(party, good)
+		local good_in_inventory = DATA.estate_get_inventory(estate, good)
 		supply = supply + good_in_inventory * weight
 	end)
 	return supply
@@ -259,11 +259,11 @@ function eco_values.available_use_case_from_inventory(pop, use_case)
 end
 
 ---Returns amount of days warband can travel depending on collected supplies
----@param warband warband_id
+---@param estate estate_id
 ---@return number
-function eco_values.days_of_travel(warband)
-	local supplies = eco_values.get_supply_available(warband)
-	local per_day = warband_utils.daily_supply_consumption(warband)
+function eco_values.days_of_travel(estate)
+	local supplies = eco_values.get_supply_available(estate)
+	local per_day = warband_utils.daily_supply_consumption(estate)
 
 	if per_day == 0 then
 		return 9999

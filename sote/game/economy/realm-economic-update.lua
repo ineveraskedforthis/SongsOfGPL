@@ -242,15 +242,15 @@ function rea.run(realm_id)
 
 	-- spend and set military budget target based on capitol guard
 	local military_upkeep = 0.0
-	local guard = GUARD(realm_id)
-	if guard ~= INVALID_ID then
-		military_upkeep = warband_utils.predict_upkeep(guard)
-		local budget = DATA.realm_get_budget_budget(realm_id, BUDGET_CATEGORY.MILITARY)
-		local spendings = budget / 12
-		DATA.warband_inc_treasury(guard, spendings)
-		DATA.realm_inc_budget_budget(realm_id, BUDGET_CATEGORY.MILITARY, -spendings)
-	end
-	DATA.realm_set_budget_target(realm_id, BUDGET_CATEGORY.MILITARY, military_upkeep * 12)
+	-- local guard = GUARD(realm_id)
+	-- if guard ~= INVALID_ID then
+	-- 	military_upkeep = warband_utils.predict_upkeep(guard)
+	-- 	local budget = DATA.realm_get_budget_budget(realm_id, BUDGET_CATEGORY.MILITARY)
+	-- 	local spendings = budget / 12
+	-- 	DATA.warband_inc_treasury(guard, spendings)
+	-- 	DATA.realm_inc_budget_budget(realm_id, BUDGET_CATEGORY.MILITARY, -spendings)
+	-- end
+	-- DATA.realm_set_budget_target(realm_id, BUDGET_CATEGORY.MILITARY, military_upkeep * 12)
 
 	-- invest
 	local military_investment = DATA.realm_get_budget_to_be_invested(realm_id, BUDGET_CATEGORY.MILITARY)* 0.1

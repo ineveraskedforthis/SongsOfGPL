@@ -1,6 +1,25 @@
+name string="unnamed"
+morale float=0.5
+current_status ESTATE_STATUS
+idle_stance ESTATE_STANCE
+movement_progress number
+current_path table<tile_id>
+current_time_used_ratio float=0.0 How much monthly time is actualy used by warband. Accumulated daily.
+units_current float[unit_type_id] Current distribution of units in the warband
+units_target float[unit_type_id] Units to recruit
 savings float
+balance_last_tick float
+total_upkeep float=0.0
+predicted_upkeep float=0.0
+supplies float=0.0
+supplies_target_days float=60
 inventory float[trade_good_id]
 inventory_sold_last_tick float[trade_good_id]
 inventory_bought_last_tick float[trade_good_id]
 inventory_demanded_last_tick float[trade_good_id]
-balance_last_tick float
+technologies_present uint8_t[technology_id]
+technologies_researchable uint8_t[technology_id]
+technologies_throughput_boosts float[production_method_id]
+technologies_output_boosts float[production_method_id]
+technologies_input_boosts float[production_method_id]
+buildable_buildings uint8_t[building_type_id]

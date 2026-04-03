@@ -225,6 +225,36 @@ object {
         type { biome_id }
         tag { scenario }
     }
+    property{
+        name { foragers_limit }
+        type { float }
+        tag { scenario }
+    }
+    property{
+        name { foragers_targets }
+        type { array{uint8_t}{base_types::forage_container} }
+        tag { scenario }
+    }
+    property{
+        name { infrastructure_needed }
+        type { float }
+        tag { scenario }
+    }
+    property{
+        name { infrastructure }
+        type { float }
+        tag { scenario }
+    }
+    property{
+        name { infrastructure_investment }
+        type { float }
+        tag { scenario }
+    }
+    property{
+        name { infrastructure_efficiency }
+        type { float }
+        tag { scenario }
+    }
 }
 object {
     name { plate }
@@ -322,7 +352,7 @@ object {
     }
     property{
         name { traditional_forager_targets }
-        type { array{uint8_t}{float} }
+        type { array{production_method_id}{float} }
         tag { scenario }
     }
 }
@@ -575,11 +605,6 @@ object {
         tag { scenario }
     }
     property{
-        name { hydration }
-        type { float }
-        tag { scenario }
-    }
-    property{
         name { movement_cost }
         type { float }
         tag { scenario }
@@ -587,41 +612,6 @@ object {
     property{
         name { center }
         type { tile_id }
-        tag { scenario }
-    }
-    property{
-        name { infrastructure_needed }
-        type { float }
-        tag { scenario }
-    }
-    property{
-        name { infrastructure }
-        type { float }
-        tag { scenario }
-    }
-    property{
-        name { infrastructure_investment }
-        type { float }
-        tag { scenario }
-    }
-    property{
-        name { infrastructure_efficiency }
-        type { float }
-        tag { scenario }
-    }
-    property{
-        name { technologies_present }
-        type { array{technology_id}{uint8_t} }
-        tag { scenario }
-    }
-    property{
-        name { technologies_researchable }
-        type { array{technology_id}{uint8_t} }
-        tag { scenario }
-    }
-    property{
-        name { buildable_buildings }
-        type { array{building_type_id}{uint8_t} }
         tag { scenario }
     }
     property{
@@ -715,31 +705,6 @@ object {
         tag { scenario }
     }
     property{
-        name { foragers }
-        type { float }
-        tag { scenario }
-    }
-    property{
-        name { foragers_water }
-        type { float }
-        tag { scenario }
-    }
-    property{
-        name { foragers_limit }
-        type { float }
-        tag { scenario }
-    }
-    property{
-        name { forage_efficiency }
-        type { float }
-        tag { scenario }
-    }
-    property{
-        name { foragers_targets }
-        type { array{uint32_t}{base_types::forage_container} }
-        tag { scenario }
-    }
-    property{
         name { local_resources }
         type { array{uint32_t}{base_types::resource_location} }
         tag { scenario }
@@ -765,103 +730,12 @@ object {
         tag { scenario }
     }
     property{
-        name { throughput_boosts }
-        type { array{production_method_id}{float} }
-        tag { scenario }
-    }
-    property{
-        name { input_efficiency_boosts }
-        type { array{production_method_id}{float} }
-        tag { scenario }
-    }
-    property{
-        name { local_efficiency_boosts }
-        type { array{production_method_id}{float} }
-        tag { scenario }
-    }
-    property{
-        name { output_efficiency_boosts }
-        type { array{production_method_id}{float} }
-        tag { scenario }
-    }
-    property{
         name { on_a_river }
         type { bitfield }
         tag { scenario }
     }
     property{
         name { on_a_forest }
-        type { bitfield }
-        tag { scenario }
-    }
-}
-object {
-    name { warband }
-    storage_type { erasable }
-    size { 50000 }
-    tag {scenario}
-    property{
-        name { units_current }
-        type { array{unit_type_id}{float} }
-        tag { scenario }
-    }
-    property{
-        name { units_target }
-        type { array{unit_type_id}{float} }
-        tag { scenario }
-    }
-    property{
-        name { current_status }
-        type { uint8_t }
-        tag { scenario }
-    }
-    property{
-        name { idle_stance }
-        type { uint8_t }
-        tag { scenario }
-    }
-    property{
-        name { current_time_used_ratio }
-        type { float }
-        tag { scenario }
-    }
-    property{
-        name { inventory }
-        type { array{trade_good_id}{float} }
-        tag { scenario }
-    }
-    property{
-        name { treasury }
-        type { float }
-        tag { scenario }
-    }
-    property{
-        name { total_upkeep }
-        type { float }
-        tag { scenario }
-    }
-    property{
-        name { predicted_upkeep }
-        type { float }
-        tag { scenario }
-    }
-    property{
-        name { supplies }
-        type { float }
-        tag { scenario }
-    }
-    property{
-        name { supplies_target_days }
-        type { float }
-        tag { scenario }
-    }
-    property{
-        name { morale }
-        type { float }
-        tag { scenario }
-    }
-    property{
-        name { in_settlement }
         type { bitfield }
         tag { scenario }
     }
@@ -1147,7 +1021,62 @@ object {
     size { 300000 }
     tag {scenario}
     property{
+        name { morale }
+        type { float }
+        tag { scenario }
+    }
+    property{
+        name { current_status }
+        type { uint8_t }
+        tag { scenario }
+    }
+    property{
+        name { idle_stance }
+        type { uint8_t }
+        tag { scenario }
+    }
+    property{
+        name { current_time_used_ratio }
+        type { float }
+        tag { scenario }
+    }
+    property{
+        name { units_current }
+        type { array{unit_type_id}{float} }
+        tag { scenario }
+    }
+    property{
+        name { units_target }
+        type { array{unit_type_id}{float} }
+        tag { scenario }
+    }
+    property{
         name { savings }
+        type { float }
+        tag { scenario }
+    }
+    property{
+        name { balance_last_tick }
+        type { float }
+        tag { scenario }
+    }
+    property{
+        name { total_upkeep }
+        type { float }
+        tag { scenario }
+    }
+    property{
+        name { predicted_upkeep }
+        type { float }
+        tag { scenario }
+    }
+    property{
+        name { supplies }
+        type { float }
+        tag { scenario }
+    }
+    property{
+        name { supplies_target_days }
         type { float }
         tag { scenario }
     }
@@ -1172,8 +1101,33 @@ object {
         tag { scenario }
     }
     property{
-        name { balance_last_tick }
-        type { float }
+        name { technologies_present }
+        type { array{technology_id}{uint8_t} }
+        tag { scenario }
+    }
+    property{
+        name { technologies_researchable }
+        type { array{technology_id}{uint8_t} }
+        tag { scenario }
+    }
+    property{
+        name { technologies_throughput_boosts }
+        type { array{production_method_id}{float} }
+        tag { scenario }
+    }
+    property{
+        name { technologies_output_boosts }
+        type { array{production_method_id}{float} }
+        tag { scenario }
+    }
+    property{
+        name { technologies_input_boosts }
+        type { array{production_method_id}{float} }
+        tag { scenario }
+    }
+    property{
+        name { buildable_buildings }
+        type { array{building_type_id}{uint8_t} }
         tag { scenario }
     }
 }
@@ -1231,8 +1185,8 @@ relationship {
     size { 300000 }
     tag {scenario}
     link {
-        object { province }
-        name { province }
+        object { tile }
+        name { tile }
         type { many }
         index_storage{array}
     }
@@ -1245,7 +1199,7 @@ relationship {
 relationship {
     name { building_estate }
     storage_type { erasable }
-    size { 600000 }
+    size { 6000000 }
     tag {scenario}
     link {
         object { estate }
@@ -1260,83 +1214,18 @@ relationship {
     }
 }
 relationship {
-    name { warband_leader }
+    name { estate_unit }
     storage_type { erasable }
-    size { 50000 }
+    size { 300000 }
     tag {scenario}
     link {
         object { pop }
-        name { leader }
+        name { pop }
         type { unique }
     }
     link {
-        object { warband }
-        name { warband }
-        type { unique }
-    }
-}
-relationship {
-    name { warband_recruiter }
-    storage_type { erasable }
-    size { 50000 }
-    tag {scenario}
-    link {
-        object { pop }
-        name { recruiter }
-        type { unique }
-    }
-    link {
-        object { warband }
-        name { warband }
-        type { unique }
-    }
-}
-relationship {
-    name { warband_commander }
-    storage_type { erasable }
-    size { 50000 }
-    tag {scenario}
-    link {
-        object { pop }
-        name { commander }
-        type { unique }
-    }
-    link {
-        object { warband }
-        name { warband }
-        type { unique }
-    }
-}
-relationship {
-    name { warband_location }
-    storage_type { erasable }
-    size { 50000 }
-    tag {scenario}
-    link {
-        object { tile }
-        name { location }
-        type { many }
-        index_storage{array}
-    }
-    link {
-        object { warband }
-        name { warband }
-        type { unique }
-    }
-}
-relationship {
-    name { warband_unit }
-    storage_type { erasable }
-    size { 50000 }
-    tag {scenario}
-    link {
-        object { pop }
-        name { unit }
-        type { unique }
-    }
-    link {
-        object { warband }
-        name { warband }
+        object { estate }
+        name { estate }
         type { many }
         index_storage{array}
     }
@@ -1347,13 +1236,61 @@ relationship {
     }
 }
 relationship {
+    name { estate_leader }
+    storage_type { erasable }
+    size { 50000 }
+    tag {scenario}
+    link {
+        object { pop }
+        name { leader }
+        type { unique }
+    }
+    link {
+        object { estate }
+        name { estate }
+        type { unique }
+    }
+}
+relationship {
+    name { estate_recruiter }
+    storage_type { erasable }
+    size { 50000 }
+    tag {scenario}
+    link {
+        object { pop }
+        name { recruiter }
+        type { unique }
+    }
+    link {
+        object { estate }
+        name { estate }
+        type { unique }
+    }
+}
+relationship {
+    name { estate_commander }
+    storage_type { erasable }
+    size { 50000 }
+    tag {scenario}
+    link {
+        object { pop }
+        name { commander }
+        type { unique }
+    }
+    link {
+        object { estate }
+        name { estate }
+        type { unique }
+    }
+}
+relationship {
     name { character_location }
     storage_type { erasable }
     size { 100000 }
     tag {scenario}
     link {
-        object { province }
-        name { location }
+        object { estate }
+        name { estate }
         type { many }
         index_storage{array}
     }
@@ -1369,25 +1306,8 @@ relationship {
     size { 300000 }
     tag {scenario}
     link {
-        object { province }
-        name { home }
-        type { many }
-        index_storage{array}
-    }
-    link {
-        object { pop }
-        name { pop }
-        type { unique }
-    }
-}
-relationship {
-    name { pop_location }
-    storage_type { erasable }
-    size { 300000 }
-    tag {scenario}
-    link {
-        object { province }
-        name { location }
+        object { estate }
+        name { estate }
         type { many }
         index_storage{array}
     }
@@ -1506,7 +1426,7 @@ relationship {
     size { 15000 }
     tag {scenario}
     link {
-        object { warband }
+        object { estate }
         name { guard }
         type { unique }
     }
@@ -1780,9 +1700,9 @@ object {
     tag {scenario}
 }
 object {
-    name { warband_status }
+    name { estate_status }
     storage_type { contiguous }
-    size { 10 }
+    size { 11 }
     tag {scenario}
     property{
         name { time_used }
@@ -1791,7 +1711,7 @@ object {
     }
 }
 object {
-    name { warband_stance }
+    name { estate_stance }
     storage_type { contiguous }
     size { 4 }
     tag {scenario}
@@ -1805,13 +1725,8 @@ object {
 object {
     name { forage_resource }
     storage_type { contiguous }
-    size { 10 }
+    size { 7 }
     tag {scenario}
-    property{
-        name { handle }
-        type { uint8_t }
-        tag { scenario }
-    }
 }
 object {
     name { budget_category }
@@ -2399,13 +2314,13 @@ object {
         tag { scenario }
     }
     property{
-        name { foraging }
-        type { bitfield }
+        name { self_sourcing_fraction }
+        type { float }
         tag { scenario }
     }
     property{
-        name { hydration }
-        type { bitfield }
+        name { foraging }
+        type { uint8_t }
         tag { scenario }
     }
     property{
