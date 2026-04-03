@@ -51,11 +51,11 @@ local function load()
 				return "You are busy."
 			end
 
-			local warband = LEADER_OF_WARBAND(root)
+			local warband = LEADER_OF_ESTATE(root)
 			if warband == INVALID_ID then
 				return "You have to lead a warband to demand tribute"
 			end
-			local warband_location = WARBAND_TILE(warband)
+			local warband_location = ESTATE_TILE(warband)
 			local warband_province = TILE_PROVINCE(warband_location)
 			local province_center = DATA.province_get_center(warband_province)
 			if province_center ~= warband_location then
@@ -81,11 +81,11 @@ local function load()
 			return true
 		end,
 		clickable = function(root, _)
-			local warband = LEADER_OF_WARBAND(root)
+			local warband = LEADER_OF_ESTATE(root)
 			if warband == INVALID_ID then
 				return false
 			end
-			local warband_location = WARBAND_TILE(warband)
+			local warband_location = ESTATE_TILE(warband)
 			local warband_province = TILE_PROVINCE(warband_location)
 			local province_center = DATA.province_get_center(warband_province)
 			if province_center ~= warband_location then
@@ -106,11 +106,11 @@ local function load()
 			return true
 		end,
 		available = function(root, _)
-			local warband = LEADER_OF_WARBAND(root)
+			local warband = LEADER_OF_ESTATE(root)
 			if warband == INVALID_ID then
 				return false
 			end
-			local warband_location = WARBAND_TILE(warband)
+			local warband_location = ESTATE_TILE(warband)
 			local warband_province = TILE_PROVINCE(warband_location)
 			local province_center = DATA.province_get_center(warband_province)
 			if province_center ~= warband_location then
@@ -134,8 +134,8 @@ local function load()
 			return nil, true
 		end,
 		ai_will_do = function(root, _, _)
-			local warband = LEADER_OF_WARBAND(root)
-			local warband_location = WARBAND_TILE(warband)
+			local warband = LEADER_OF_ESTATE(root)
+			local warband_location = ESTATE_TILE(warband)
 			local warband_province = TILE_PROVINCE(warband_location)
 
 			local primary_target = LEADER(PROVINCE_REALM(warband_province))
@@ -182,8 +182,8 @@ local function load()
 			return base * multiplier
 		end,
 		effect = function(root, _, _)
-			local warband = LEADER_OF_WARBAND(root)
-			local warband_location = WARBAND_TILE(warband)
+			local warband = LEADER_OF_ESTATE(root)
+			local warband_location = ESTATE_TILE(warband)
 			local warband_province = TILE_PROVINCE(warband_location)
 			local realm = PROVINCE_REALM(warband_province)
 			---@type Character
@@ -370,11 +370,11 @@ local function load()
 			pretriggers.foreign_policy_decision_maker, pretriggers.during_migration
 		},
 		function (root)
-			local local_realm = PROVINCE_REALM(LOCAL_PROVINCE(root))
+			local local_realm = PROVINCE_REALM(POP_PROVINCE(root))
 			if local_realm == INVALID_ID then
 				migration_effects.settle_down(root, true)
 			else
-				WORLD:emit_immediate_event("migration-invasion-preparation", root, PROVINCE_REALM(LOCAL_PROVINCE(root)))
+				WORLD:emit_immediate_event("migration-invasion-preparation", root, PROVINCE_REALM(POP_PROVINCE(root)))
 			end
 		end,
 		function (root)
@@ -395,7 +395,7 @@ local function load()
 			pretriggers.foreign_policy_decision_maker, pretriggers.during_migration
 		},
 		function (root)
-			local local_realm = PROVINCE_REALM(LOCAL_PROVINCE(root))
+			local local_realm = PROVINCE_REALM(POP_PROVINCE(root))
 			if local_realm == INVALID_ID then
 				migration_effects.settle_down(root, true)
 			else
@@ -406,20 +406,20 @@ local function load()
 			return 1
 		end
 	)
-
+--[[
 	local colonisation_cost = 10 -- base 10 per family unit transfered
 
 	---collect colonization information
-	---@param province Province
+	---@param estate estate_id
 	---@return table<POP, POP> valid_family_units
 	---@return integer  valid_family_count
-	local function valid_home_family_units(province)
-		local all_pops = tabb.map_array(DATA.get_pop_location_from_location(province), DATA.pop_location_get_pop)
+	local function valid_home_family_units(estate)
+		local all_pops = tabb.map_array(DATA.get_pop_location_from_estate(estate), DATA.pop_location_get_pop)
 		local family_units = tabb.filter_array(all_pops, function (item)
 			local race = DATA.fatten_race(RACE(item))
 			local home_location = DATA.get_home_from_pop(item)
 			local home = DATA.home_get_home(home_location)
-			local unit_of_warband = DATA.get_warband_unit_from_unit(item)
+			local unit_of_warband = DATA.get_warband_unit_from_pop(item)
 			local age = AGE_YEARS(item)
 
 			return home == province and age >= race.teen_age and age < race.middle_age and unit_of_warband == INVALID_ID
@@ -436,7 +436,7 @@ local function load()
 			local valid_family_units, valid_family_count = valid_home_family_units(DATA.realm_get_capitol(REALM(root)))
 			-- colonizing cost calories for travel
 			local travel_time = path.pathfind(
-				DATA.province_get_center(PROVINCE(root)),
+				DATA.province_get_center(POP_PROVINCE(root)),
 				DATA.province_get_center(primary_target),
 				character_values.travel_speed_race(DATA.realm_get_primary_race(REALM(root))),
 				DATA.realm_get_known_provinces(REALM(root))
@@ -485,7 +485,7 @@ local function load()
 			if DATA.pop_get_busy(root) then
 				return "You are too busy to consider it."
 			end
-			if PROVINCE(root) ~= DATA.realm_get_capitol(realm) then
+			if POP_PROVINCE(root) ~= DATA.realm_get_capitol(realm) then
 				return "You has to be in your home province to organize colonisation."
 			end
 			if valid_family_count < 11 then
@@ -541,7 +541,7 @@ local function load()
 				return false
 			end
 
-			local province = PROVINCE(root)
+			local province = POP_PROVINCE(root)
 			local capitol = CAPITOL(realm)
 			if province ~= capitol then
 				return false
@@ -575,7 +575,7 @@ local function load()
 			local _, valid_family_count = valid_home_family_units(CAPITOL(REALM(root)))
 			-- colonizing cost calories for travel
 			local travel_time = path.pathfind(
-				DATA.province_get_center(PROVINCE(root)),
+				DATA.province_get_center(POP_PROVINCE(root)),
 				DATA.province_get_center(primary_target),
 				character_values.travel_speed_race(MAIN_RACE(REALM(root))),
 				DATA.realm_get_known_provinces(REALM(root))
@@ -624,7 +624,7 @@ local function load()
 			if BUSY(root) then
 				return false
 			end
-			if PROVINCE(root) ~= CAPITOL(REALM(root)) then
+			if POP_PROVINCE(root) ~= CAPITOL(REALM(root)) then
 				return false
 			end
 			if valid_family_count < 11 then
@@ -649,7 +649,7 @@ local function load()
 
 			local realm = REALM(root)
 			local capitol = CAPITOL(realm)
-			local province = PROVINCE(root)
+			local province = POP_PROVINCE(root)
 			local age = AGE_YEARS(root)
 			local race = RACE(root)
 			local teen_age = DATA.race_get_teen_age(race)
@@ -721,7 +721,7 @@ local function load()
 
 			-- colonizing cost calories for travel
 			local travel_time = path.pathfind(
-				DATA.province_get_center(PROVINCE(root)),
+				DATA.province_get_center(POP_PROVINCE(root)),
 				DATA.province_get_center(primary_target),
 				character_values.travel_speed_race(MAIN_RACE(REALM(root))),
 				DATA.realm_get_known_provinces(REALM(root))
@@ -787,7 +787,7 @@ local function load()
 				leader = leader,
 				travel_cost = calorie_cost,
 				pop_payment = pop_payment,
-				origin_province = PROVINCE(root),
+				origin_province = POP_PROVINCE(root),
 				target_province = primary_target
 			}
 			if ot.decides_foreign_policy(root, realm) then
@@ -803,6 +803,7 @@ local function load()
 			end
 		end
 	}
+	--]]
 end
 
 return load

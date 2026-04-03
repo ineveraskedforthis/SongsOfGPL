@@ -1,4 +1,3 @@
 name string
 description string
 icon string
-handle JOBTYPE

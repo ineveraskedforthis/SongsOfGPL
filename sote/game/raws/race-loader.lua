@@ -177,7 +177,7 @@ function ll.load()
 		female_body_size = large_size,
 		female_efficiency = {
 			[JOBTYPE.FARMER] = 1,
-			[JOBTYPE.ARTISAN] = 1.5, -- beavers are natural builders
+			[JOBTYPE.ARTISAN] = 2, -- beavers are natural builders
 			[JOBTYPE.CLERK] = 1,
 			[JOBTYPE.LABOURER] = large_size,
 			[JOBTYPE.WARRIOR] = 1.125, -- beavers have sharp teeth
@@ -187,12 +187,12 @@ function ll.load()
 		},
 		female_needs = {
 			[NEED.FOOD] = {
-				[WATER_USE_CASE] = large_size,
-				[CALORIES_USE_CASE] = large_size,		-- 1250 kcal
-				[retrieve_use_case('cambium')] = 0.5,			--  750 kcal
+				[WATER_USE_CASE] = large_size / 3,
+				[CALORIES_USE_CASE] = large_size / 2,
+				[retrieve_use_case('cambium')] = large_size / 5,
 			},
 			[NEED.CLOTHING] = {
-				[retrieve_use_case('clothes')] = large_size * 0.5 -- beavers have really nice fur
+				[retrieve_use_case('clothes')] = large_size / 4 -- beavers have really nice fur
 			},
 			[NEED.FURNITURE] = {
 				[retrieve_use_case('furniture')] = large_size
@@ -209,7 +209,7 @@ function ll.load()
 		male_body_size = largest_size,
 		male_efficiency = {
 			[JOBTYPE.FARMER] = 1,
-			[JOBTYPE.ARTISAN] = 1.5, -- beavers are natural builders
+			[JOBTYPE.ARTISAN] = 2, -- beavers are natural builders
 			[JOBTYPE.CLERK] = 1,
 			[JOBTYPE.LABOURER] = largest_size,
 			[JOBTYPE.WARRIOR] = 1.25, -- beavers have sharp teeth
@@ -219,12 +219,12 @@ function ll.load()
 		},
 		male_needs = {
 			[NEED.FOOD] = {
-				[WATER_USE_CASE] = largest_size,
-				[CALORIES_USE_CASE] = largest_size,	-- 1500 kcal
-				[retrieve_use_case('cambium')] = 0.5,				-- 1000 kcal
+				[WATER_USE_CASE] = largest_size / 3,
+				[CALORIES_USE_CASE] = largest_size / 2,
+				[retrieve_use_case('cambium')] = largest_size / 5,
 			},
 			[NEED.CLOTHING] = {
-				[retrieve_use_case('clothes')] = largest_size * 0.5 -- beavers have really nice fur
+				[retrieve_use_case('clothes')] = largest_size / 4 -- beavers have really nice fur
 			},
 			[NEED.FURNITURE] = {
 				[retrieve_use_case('furniture')] = largest_size
@@ -239,7 +239,8 @@ function ll.load()
 		},
 		male_infrastructure_needs = largest_size,
 		carrying_capacity_weight = largest_size,
-		requires_large_river = true
+		requires_large_river = true,
+		requires_large_forest = true
 	}
 
 	---@type PortraitDescription
@@ -370,8 +371,8 @@ function ll.load()
 		middle_age = 30,
 		elder_age = 50,
 		max_age = 65,
-		minimum_comfortable_temperature = 5,
-		minimum_absolute_temperature = -10,
+		minimum_comfortable_temperature = 0,
+		minimum_absolute_temperature = -15,
 		fecundity = 1.1,
 		spotting = 1.0,
 		visibility = 1.25,
@@ -440,7 +441,6 @@ function ll.load()
 		},
 		male_infrastructure_needs = medium_size,
 		carrying_capacity_weight = large_size,
-		requires_large_forest = true,
 	}
 
 	---@type PortraitDescription

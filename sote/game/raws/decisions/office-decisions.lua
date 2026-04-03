@@ -83,12 +83,12 @@ local function load()
 		secondary_target = 'none',
 		base_probability = 1 / 12 , -- Once every year on average
 		pretrigger = function(root)
-			if not ot.designates_offices(root, PROVINCE(root)) then return false end
+			if not ot.designates_offices(root, POP_PROVINCE(root)) then return false end
 			return true
 		end,
 		clickable = function(root, primary_target)
 			local realm = REALM(root)
-			if not ot.designates_offices(root, PROVINCE(primary_target)) then return false end
+			if not ot.designates_offices(root, POP_PROVINCE(primary_target)) then return false end
 			if office_values.overseer(realm) ~= primary_target then return false end
 			return true
 		end,
@@ -129,11 +129,11 @@ local function load()
 		secondary_target = 'none',
 		base_probability = 1 / 12 , -- Once every year on average
 		pretrigger = function(root)
-			if not ot.designates_offices(root, PROVINCE(root)) then return false end
+			if not ot.designates_offices(root, POP_PROVINCE(root)) then return false end
 			return true
 		end,
 		clickable = function(root, primary_target)
-			if not ot.designates_offices(root, PROVINCE(primary_target)) then return false end
+			if not ot.designates_offices(root, POP_PROVINCE(primary_target)) then return false end
 			if not ot.valid_tribute_collector_candidate(primary_target, REALM(root))   then return false end
 			return true
 		end,
@@ -208,7 +208,7 @@ local function load()
 			DESIGNATES_OFFICES_LOCAL
 		},
 		function(root)
-			military_effects.gather_guard(province_utils.realm(PROVINCE(root)))
+			military_effects.gather_guard(province_utils.realm(POP_PROVINCE(root)))
 		end,
 		function(root)
 			return 1
@@ -247,7 +247,7 @@ local function load()
 		end,
 
 		function(root)
-			local province = PROVINCE(root)
+			local province = POP_PROVINCE(root)
 			local local_realm = LOCAL_REALM(root)
 			local candidate = demography_values.sample_character_from_province(province)
 

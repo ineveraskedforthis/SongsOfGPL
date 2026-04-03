@@ -117,7 +117,7 @@ local function draw_market_body (province, ui_panel, base_unit, gam)
 			---@param v ItemDataCollapsed
             render_closure = function(rect, k, v)
                 local tooltip = "Shows the diffence between buy price in your current position and sell price in selected one"
-				local player_province = LOCAL_PROVINCE(player)
+				local player_province = POP_PROVINCE(player)
 				if province == INVALID_ID then
 					ut.data_entry("", "???", rect, tooltip)
 				end
@@ -145,7 +145,7 @@ local function draw_market_body (province, ui_panel, base_unit, gam)
             width = base_unit * 3,
 			---@param v ItemDataCollapsed
             value = function(k, v)
-                local player_province = LOCAL_PROVINCE(player)
+                local player_province = POP_PROVINCE(player)
 
 				if player_province == INVALID_ID then
 					return 0

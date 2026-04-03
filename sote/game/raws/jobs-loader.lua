@@ -28,12 +28,20 @@ function d.load()
 		b = 0.3,
 	}
 	Job:new {
+		name = 'fishers',
+		icon = 'fishing-hook.png',
+		description = 'fishers',
+		r = 0.2,
+		g = 0.2,
+		b = 1.3,
+	}
+	Job:new {
 		name = 'knappers',
 		icon = 'rock.png',
 		description = 'knappers',
 		r = 0.3,
 		g = 0.3,
-		b = 1,
+		b = 0.3,
 	}
 	Job:new {
 		name = 'shamans',
@@ -134,7 +142,7 @@ function d.load()
 
 	UNEMPLOYED = Job:new {
 		name = "Unemployed",
-		icon = "beer-stein.png",
+		icon = "shrug.png",
 		description = "Unemployed",
 		r = 0.23,
 		g = 0.23,
@@ -142,7 +150,7 @@ function d.load()
 	}
 	WARRIORS = Job:new {
 		name = "Warriors",
-		icon = "beer-stein.png",
+		icon = "guards.png",
 		description = "Warriors",
 		r = 0.43,
 		g = 0.23,
@@ -150,7 +158,7 @@ function d.load()
 	}
 	CHILDREN = Job:new {
 		name = "Children",
-		icon = "beer-stein.png",
+		icon = "ages.png",
 		description = "Children",
 		r = 0.83,
 		g = 0.83,

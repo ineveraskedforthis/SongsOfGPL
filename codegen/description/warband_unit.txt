@@ -1,3 +1,0 @@
-link one unit pop
-link many warband warband
-type unit_type_id Current unit type

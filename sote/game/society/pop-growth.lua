@@ -9,12 +9,11 @@ local demography_effects = require "game.raws.effects.demography"
 
 
 local min_life_need = 0.2
-local death_rate = 0.003333333 -- 4% per year
-local birth_rate = 0.005833333 -- 7% per year
+local death_rate = 0.04/12 -- 4% per year
+local birth_rate = 0.07/12 -- 7% per year
 
----Runs natural growth and decay on non warband pops in single province.
----@param province_id Province
-function pg.province(province_id)
+---Runs natural growth and decay on all pops.
+function pg.run()
 	---#logging LOGS:write("province growth " .. tostring(province_id).."\n")
 	---#logging LOGS:flush()
 
@@ -23,42 +22,12 @@ function pg.province(province_id)
 	local to_remove = {}
 	---@type POP[]
 	local to_add = {}
-
-	DATA.for_each_outlaw_location_from_location(province_id, function (item)
-		local pop = DATA.outlaw_location_get_outlaw(item)
-		if UNIT_OF(pop) == INVALID_ID then
-			pg.run(pop,to_add,to_remove)
-		end
-	end)
 
 	-- local pops and characters
 	---@type pop_id[]
 	local pops_and_characters = {}
-	DATA.for_each_pop_location_from_location(province_id, function (item)
-		local pop = DATA.pop_location_get_pop(item)
-		if UNIT_OF(pop) == INVALID_ID then
-			pg.run(pop,to_add,to_remove)
-		end
-	end)
-
-	pg.add_remove(to_add,to_remove)
-end
-
----Runs natural growth and decay on all units in a warband.
----@param warband_id warband_id
-function pg.warband(warband_id)
-	---#logging LOGS:write("province growth " .. tostring(province_id).."\n")
-	---#logging LOGS:flush()
-
-	-- Mark pops for removal...
-	---@type POP[]
-	local to_remove = {}
-	---@type POP[]
-	local to_add = {}
-
-	DATA.for_each_warband_unit_from_warband(warband_id, function (item)
-		local pop = DATA.warband_unit_get_unit(item)
-		pg.run(pop,to_add,to_remove)
+	DATA.for_each_pop(function (item)
+		pg.check(item,to_add,to_remove)
 	end)
 
 	pg.add_remove(to_add,to_remove)
@@ -72,7 +41,7 @@ function pg.add_remove(to_add,to_remove)
 		-- do not delete pop twice
 		if DCON.dcon_pop_is_valid(pp - 1) then
 			if IS_CHARACTER(pp) then
-				WORLD:emit_immediate_event("death", pp, province_id)
+				WORLD:emit_immediate_event("death", pp, POP_PROVINCE(pp))
 			else
 				demography_effects.kill_pop(pp)
 			end
@@ -90,7 +59,6 @@ function pg.add_remove(to_add,to_remove)
 		local fat_race = DATA.fatten_race(race)
 
 		-- TODO figure out beter way to keep character count lower
-		-- spawn orphan pop instead of character child if too many nobles to home pop
 
 		local newborn = INVALID_ID
 		local birth_year = WORLD.year
@@ -119,25 +87,23 @@ function pg.add_remove(to_add,to_remove)
 		assert(hour==WORLD.hour,"FAILED TO STORE HOUR " .. hour .. " ~= " .. WORLD.hour .. " ( " .. birthtick .. " )")
 --]]
 
-		local parent_home_province = HOME(pp)
-		if parent_home_province ~= INVALID_ID then
-			province_utils.set_home(parent_home_province, newborn)
+		local parent_home = HOME(pp)
+		if parent_home ~= INVALID_ID then
+			province_utils.set_home(parent_home, newborn)
 		else -- if no home province, check for realm to asign
 			local parent_realm = DATA.realm_pop_get_realm(DATA.get_realm_pop_from_pop(pp))
 			if parent_realm ~= INVALID_ID then
 				SET_REALM(newborn,parent_realm)
 			end
 		end
-		local parent_province = PROVINCE(pp)
-		if parent_province ~= INVALID_ID then
+		local parent_location = POP_ESTATE(pp)
+		local child_unit_type = parent_home == parent_location and UNIT_TYPE.CIVILIAN or UNIT_TYPE.FOLLOWER
+		if parent_location ~= INVALID_ID then
 			if character then
-				province_utils.add_character(parent_province, newborn)
+				province_utils.add_character(parent_location, newborn, child_unit_type)
 			else
-				province_utils.add_pop(parent_province, newborn)
+				require "game.raws.effects.warband".set_as_unit(parent_location, newborn, child_unit_type)
 			end
-		else -- if not in a settlement, then part of a warband, add child to it
-			local warband = UNIT_OF(pp)
-			require "game.raws.effects.demography".recruit(newborn,warband,UNIT_TYPE.FOLLOWER)
 		end
 
 		DATA.force_create_parent_child_relation(pp, newborn)
@@ -163,8 +129,10 @@ function pg.add_remove(to_add,to_remove)
 		end
 	end
 end
+
+---TODO add pregnancy flag and gestation length
 ---check pop for birth or death
-function pg.run(pop,to_add,to_remove)
+function pg.check(pop,to_add,to_remove)
 	assert(DCON.dcon_pop_is_valid(pop - 1), tostring(pop))
 	local min_life_satisfaction = DATA.pop_get_life_needs_satisfaction(pop)
 --[[

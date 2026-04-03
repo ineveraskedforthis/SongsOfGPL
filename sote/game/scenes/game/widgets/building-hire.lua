@@ -42,24 +42,17 @@ return function (rect, building)
 		return
 	end
 
-	if PROVINCE(owner) ~= province then
+	if POP_PROVINCE(owner) ~= province then
 		ui.text("Enter the settlement to manage estate", rect, "center", "center")
 		return
 	end
 
+	local tile = ESTATE_TILE(estate)
+
 	local building_type = DATA.building_get_current_type(building)
 	local method = DATA.building_type_get_production_method(building_type)
-	local inf = province_utils.get_infrastructure_efficiency(province)
-	local efficiency_from_infrastructure = math.min(1.5, 0.5 + 0.5 * math.sqrt(2 * inf))
-	local local_method_efficiency = production_method_utils.get_efficiency(method, province)
-	local foragers = DATA.province_get_foragers(province)
-	local foragers_limit = DATA.province_get_foragers_limit(province)
-	local forage_efficiency = 1
-	if DATA.production_method_get_foraging(method) then
-		forage_efficiency = dbm.foraging_efficiency(foragers_limit, foragers)
-	end
 
-	local unemployed_pops = demography_values.unemployed_pops(province)
+	local unemployed_pops = demography_values.unemployed_pops(tile)
 
 	if (#unemployed_pops == 0) then
 		ui.text("No available workers here", rect, "center", "center")

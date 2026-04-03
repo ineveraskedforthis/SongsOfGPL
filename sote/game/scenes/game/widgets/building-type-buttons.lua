@@ -156,7 +156,7 @@ function btb.building_type_buttons(gam, rect, building_type, tile_id)
 	local province = tile_utils.province(tile_id)
 	local realm = province_utils.realm(province)
 
-	if (WORLD.player_character ~= INVALID_ID) and PROVINCE(WORLD.player_character) == province then
+	if (WORLD.player_character ~= INVALID_ID) and POP_PROVINCE(WORLD.player_character) == province then
 		construction_button(gam, r, building_type, tile_id, WORLD.player_character, WORLD.player_character, false)
 	end
 

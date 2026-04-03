@@ -39,7 +39,7 @@ return function ()
 			return 0
 		end,
 		effect = function(root, primary_target, secondary_target)
-			local province = PROVINCE(root)
+			local province = POP_PROVINCE(root)
 			if province == INVALID_ID then return end
 			economic_effects.gift_to_province(root, province, base_gift_size)
 		end

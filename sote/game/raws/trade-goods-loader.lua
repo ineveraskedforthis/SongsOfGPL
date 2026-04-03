@@ -6,7 +6,7 @@ function d.load()
 	local retrieve_use_case = require "game.raws.raws-utils".trade_good_use_case
 	local add_use_case = require "game.raws.raws-utils".add_use_case
 
-	-- BASE GOODS
+	-- FORAGEABLE GOODS
 	TradeGood:new {
 		name = "berries",
 		description = "berries",
@@ -14,13 +14,13 @@ function d.load()
 		r = 222 / 255,
 		g = 11 / 255,
 		b = 93 / 255,
-		base_price = 1.25,
+		base_price = 1,
 		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
 		decay = 0.01
 	}
-	add_use_case("berries", "calories", 1.25)
+	add_use_case("berries", "calories", 1)
 	add_use_case("berries", "fruit", 1)
-	add_use_case("berries", "tannin", 0.25)
+	add_use_case("berries", "tannin", 1)
 
 	TradeGood:new {
 		name = "grain",
@@ -33,9 +33,22 @@ function d.load()
 		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
 		decay = 0.2
 	}
-	add_use_case("grain", "calories", 1)
-	add_use_case("grain", "cambium", 0.5)
+	add_use_case("grain", "calories", 2)
 	add_use_case("grain", "grain", 1)
+
+	TradeGood:new {
+		name = "tubers",
+		description = "tubers",
+		icon = "potato.png",
+		r = 180 / 255,
+		g = 146 / 255,
+		b = 113 / 255,
+		base_price = 1,
+		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
+		decay = 0.2
+	}
+	add_use_case("tubers", "calories", 1.5)
+	add_use_case("tubers", "cambium", 0.5)
 
 	TradeGood:new {
 		name = "mushrooms",
@@ -44,27 +57,13 @@ function d.load()
 		r = 1,
 		g = 0.86,
 		b = 0.5,
-		base_price = 2,
+		base_price = 1,
 		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
 		decay = 0.2
 	}
-	add_use_case("mushrooms", "calories", 1.6)
-	add_use_case("mushrooms", "fruit", 0.4)
-	add_use_case("mushrooms", "meat", 0.4)
-
-	TradeGood:new {
-		name = "shellfish",
-		description = "shellfish",
-		icon = "oyster.png",
-		r = 0.62,
-		g = 0.56,
-		b = 0.48,
-		base_price = 1.5,
-		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
-		decay = 0.1
-	}
-	add_use_case("shellfish", "calories", 1)
-	add_use_case("shellfish", "meat", 0.5)
+	add_use_case("mushrooms", "calories", 1)
+	add_use_case("mushrooms", "fruit", 0.5)
+	add_use_case("mushrooms", "meat", 0.5)
 
 	TradeGood:new {
 		name = "seaweed",
@@ -73,12 +72,39 @@ function d.load()
 		r = 0.28,
 		g = 0.30,
 		b = 0.19,
-		base_price = 0.5,
+		base_price = 1,
+		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
+		decay = 0.2
+	}
+	add_use_case("seaweed", "calories", 1)
+	add_use_case("seaweed", "cambium", 1)
+
+	TradeGood:new {
+		name = "shellfish",
+		description = "shellfish",
+		icon = "oyster.png",
+		r = 0.62,
+		g = 0.56,
+		b = 0.48,
+		base_price = 2,
 		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
 		decay = 0.1
 	}
-	add_use_case("seaweed", "calories", 0.5)
-	add_use_case("seaweed", "cambium", 1)
+	add_use_case("shellfish", "calories", 1)
+	add_use_case("shellfish", "meat", 1)
+
+	TradeGood:new {
+		name = "shells",
+		description = "shells",
+		icon = "scallop.png",
+		r = 0.62,
+		g = 0.56,
+		b = 0.48,
+		base_price = 1,
+		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
+		decay = 0.999
+	}
+	add_use_case("shells", "tools-like", 0.4)
 
 	TradeGood:new {
 		name = "fish",
@@ -87,12 +113,12 @@ function d.load()
 		r = 0.67,
 		g = 0.73,
 		b = 0.8,
-		base_price = 1.6,
+		base_price = 2,
 		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
 		decay = 0.05
 	}
-	add_use_case("fish", "calories", 1.6)
-	add_use_case("fish", "meat", 0.8)
+	add_use_case("fish", "calories", 1.5)
+	add_use_case("fish", "meat", 1)
 
 	TradeGood:new {
 		name = "meat",
@@ -119,8 +145,8 @@ function d.load()
 		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
 		decay = 0.4
 	}
-	add_use_case("hide", "clothes", 0.125)
-	add_use_case("hide", "containers", 0.25)
+	add_use_case("hide", "clothes", 1)
+	add_use_case("hide", "containers", 1)
 	add_use_case("hide", "hide", 1)
 
 	TradeGood:new {
@@ -130,11 +156,12 @@ function d.load()
 		r = 0.72,
 		g = 0.41,
 		b = 0.22,
-		base_price = 2,
+		base_price = 1,
 		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
 		decay = 0.9
 	}
 	add_use_case("timber", "tools-like", 0.25)
+	add_use_case("timber", "structural-material", 0.5)
 	add_use_case("timber", "timber", 1)
 	add_use_case("timber", "tannin", 1)
 	add_use_case("timber", "fuel", 1)
@@ -150,9 +177,10 @@ function d.load()
 		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
 		decay = 0.2
 	}
+	add_use_case("bark", "calories", 1)
 	add_use_case("bark", "cambium", 2)
-	add_use_case("bark", "tannin", 2)
-	add_use_case("bark", "fuel", 0.5)
+	add_use_case("bark", "tannin", 1)
+	add_use_case("bark", "fuel", 1)
 
 	-- OTHER FOODS
 	TradeGood:new {
@@ -166,7 +194,7 @@ function d.load()
 		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
 		decay = 0.99
 	}
-	add_use_case("honey", "calories", 1)
+	add_use_case("honey", "calories", 2)
 	add_use_case("honey", "mead-substrate", 1)
 
 	-- CRUCIAL SETTLEMENT SERVICES
@@ -292,8 +320,8 @@ function d.load()
 		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
 		decay = 0.99
 	}
-	add_use_case("leather", "clothes", 0.25)
-	add_use_case("leather", "containers", 0.25)
+	add_use_case("leather", "clothes", 0.5)
+	add_use_case("leather", "containers", 0.5)
 	add_use_case("leather", "leather", 1)
 
 	TradeGood:new {
@@ -308,7 +336,6 @@ function d.load()
 		decay = 1
 	}
 	add_use_case("clay", "clay", 1)
-	add_use_case("clay", "structural-material", 0.25)
 
 	TradeGood:new {
 		name = "stone",
@@ -321,8 +348,6 @@ function d.load()
 		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
 		decay = 1
 	}
-	add_use_case("stone", "tools-like", 0.125)
-	add_use_case("stone", "furniture", 0.25)
 	add_use_case("stone", "stone", 1)
 	add_use_case("stone", "structural-material", 1)
 
@@ -369,12 +394,11 @@ function d.load()
 	}
 	add_use_case("tools-blanks", "tools-like", 1)
 	add_use_case("tools-blanks", "tools", 0.5)
-	add_use_case("tools-blanks", "tools-advanced", 0.25)
 
 	-- COPPER TOOLS CHAIN
 
 	TradeGood:new {
-		name = "tools-native-copper",
+		name = "tools-copper-native",
 		description = "native copper tools",
 		icon = "stone-axe.png",
 		r = 0.71,
@@ -384,12 +408,12 @@ function d.load()
 		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
 		decay = 1
 	}
-	add_use_case("tools-native-copper", "tools-like", 2.5)
-	add_use_case("tools-native-copper", "tools", 1.25)
-	add_use_case("tools-native-copper", "tools-advanced", 0.625)
+	add_use_case("tools-copper-native", "tools-like", 2)
+	add_use_case("tools-copper-native", "tools", 1)
+	add_use_case("tools-copper-native", "tools-advanced", 0.25)
 
 	TradeGood:new {
-		name = "tools-cast-copper",
+		name = "tools-copper-cast",
 		description = "cast copper tools",
 		icon = "stone-axe.png",
 		r = 0.71,
@@ -399,9 +423,9 @@ function d.load()
 		belongs_to_category = TRADE_GOOD_CATEGORY.GOOD,
 		decay = 1
 	}
-	add_use_case("tools-cast-copper", "tools-like", 2)
-	add_use_case("tools-cast-copper", "tools", 1)
-	add_use_case("tools-cast-copper", "tools-advanced", 0.5)
+	add_use_case("tools-copper-cast", "tools-like", 1.5)
+	add_use_case("tools-copper-cast", "tools", 1)
+	add_use_case("tools-copper-cast", "tools-advanced", 0.5)
 
 	TradeGood:new {
 		name = "copper-bars",

@@ -31,8 +31,9 @@ end
 ---@return number
 function PoliticalValues.power_base(character, province)
     local total = 0
-    for k, character_location in pairs(DATA.get_character_location_from_location(province)) do
-        local test_character = DATA.character_location_get_character(character_location)
+    DATA.for_each_character_location(function (item)
+        local test_character = DATA.character_location_get_character(item)
+        if POP_PROVINCE(test_character) ~= province then return end
         local loyal_to = LOYAL_TO(test_character)
         if (loyal_to == character) or (test_character == character) then
             local realm = PROVINCE_REALM(province)
@@ -40,7 +41,7 @@ function PoliticalValues.power_base(character, province)
                 total = total + PoliticalValues.popularity(test_character, realm)
             end
         end
-    end
+    end)
 
     return total
 end
@@ -85,18 +86,18 @@ function PoliticalValues.military_strength(character)
     local total_warlords = 0
     local total_army = 0
 
-    local province = PROVINCE(character)
+    local province = POP_PROVINCE(character)
 
     if province == INVALID_ID then
         -- handle the case of wandering party
-        local leading_warband = LEADER_OF_WARBAND(character)
+        local leading_warband = LEADER_OF_ESTATE(character)
         return 1, warband_utils.size(leading_warband)
     end
 
     DATA.for_each_character_location_from_location(province, function (item)
         local test_character = DATA.character_location_get_character(item)
         local loyal_to = LOYAL_TO(test_character)
-        local leading_warband = LEADER_OF_WARBAND(test_character)
+        local leading_warband = LEADER_OF_ESTATE(test_character)
 
         if leading_warband == INVALID_ID then
             return
@@ -118,16 +119,16 @@ function PoliticalValues.military_strength_ready(character)
     local total_warlords = 0
     local total_army = 0
 
-    DATA.for_each_character_location_from_location(PROVINCE(character), function (item)
+    DATA.for_each_character_location_from_location(POP_PROVINCE(character), function (item)
         local test_character = DATA.character_location_get_character(item)
         local loyal_to = LOYAL_TO(test_character)
-        local leading_warband = LEADER_OF_WARBAND(test_character)
+        local leading_warband = LEADER_OF_ESTATE(test_character)
 
         if leading_warband == INVALID_ID then
             return
         end
 
-        if (loyal_to == character or test_character == character) and DATA.warband_get_current_status(leading_warband) == WARBAND_STATUS.IDLE then
+        if (loyal_to == character or test_character == character) and DATA.warband_get_current_status(leading_warband) == ESTATE_STATUS.IDLE then
             total_warlords = total_warlords + 1
             total_army = total_army + warband_utils.size(leading_warband)
         end

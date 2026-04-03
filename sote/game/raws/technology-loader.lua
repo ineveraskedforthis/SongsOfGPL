@@ -61,15 +61,13 @@ function d.load()
 		required_biome = {},
 		required_resource = {},
 		required_race = {},
-		throughput_boosts = {
-			[prod("blanks-knapping")] = 0.1,
-		},
+		throughput_boosts = {},
 		input_efficiency_boosts = {
-			[prod("blanks-knapping")] = 0.75,
+			[prod("blanks-knapping")] = 0.5,
 		},
 		output_efficiency_boosts = {
-			[prod("flint-extraction")] = 1.25,
-			[prod("obsidian-extraction")] = 1.25,
+			[prod("flint-extraction")] = 0.5,
+			[prod("obsidian-extraction")] = 0.5,
 		}
 	}
 	Technology:new {
@@ -84,7 +82,10 @@ function d.load()
 		required_biome = {},
 		required_resource = {},
 		required_race = {},
-		throughput_boosts = {},
+		throughput_boosts = {
+			[prod("forage-wood-timber")] = 0.25,
+			[prod("forage-wood-bark")] = 0.25,
+		},
 		input_efficiency_boosts = {},
 		output_efficiency_boosts = {},
 		associated_job = job("woodcutters")
@@ -158,9 +159,9 @@ function d.load()
 		},
 		unlocked_by = { tec("paleolithic-knowledge") },
 		throughput_boosts = {
-			[prod("gathering-0")] = 0.15,
-			[prod("gathering-1")] = 0.3,
-			[prod("gathering-2")] = 0.6
+			[prod("forage-plant-berries")] = 0.25,
+			[prod("forage-plant-grain")] = 0.25,
+			[prod("forage-plant-tubers")] = 0.25
 		},
 		research_cost = 0.15,
 		input_efficiency_boosts = {},
@@ -181,7 +182,9 @@ function d.load()
 		required_race = {},
 		throughput_boosts = {},
 		input_efficiency_boosts = {},
-		output_efficiency_boosts = {},
+		output_efficiency_boosts = {
+			[prod("rye-farming")] = 0.25
+		},
 		associated_job = job("farmers")
 	}
 	Technology:new {
@@ -196,8 +199,12 @@ function d.load()
 		required_biome = {},
 		required_resource = {},
 		required_race = {},
-		throughput_boosts = {},
-		input_efficiency_boosts = {},
+		throughput_boosts = {
+			[prod("forage-plant-tubers")] = 0.25
+		},
+		input_efficiency_boosts = {
+			[prod("rye-farming")] = 0.25
+		},
 		output_efficiency_boosts = {},
 		associated_job = job("farmers")
 	}
@@ -213,8 +220,12 @@ function d.load()
 		required_biome = {},
 		required_resource = {},
 		required_race = {},
-		throughput_boosts = {},
-		input_efficiency_boosts = {},
+		throughput_boosts = {
+			[prod("forage-plant-grain")] = 0.25
+		},
+		input_efficiency_boosts = {
+			[prod("rye-farming")] = 0.25
+		},
 		output_efficiency_boosts = {},
 		associated_job = job("farmers")
 	}
@@ -232,7 +243,9 @@ function d.load()
 		required_race = {},
 		throughput_boosts = {},
 		input_efficiency_boosts = {},
-		output_efficiency_boosts = {},
+		output_efficiency_boosts = {
+			[prod("rye-farming")] = 0.25
+		},
 		associated_job = job("farmers")
 	}
 	Technology:new {
@@ -262,8 +275,8 @@ function d.load()
 		unlocked_by = { tec("basic-fermentation"), },
 		research_cost = 1,
 		throughput_boosts = {
-			[prod("brewing-grain")] = 0.15,
-			[prod("brewing-fruit")] = 0.15
+			[prod("brewing-grain")] = 0.25,
+			[prod("brewing-fruit")] = 0.25
 		},
 		required_biome = {},
 		required_resource = {},
@@ -386,7 +399,11 @@ function d.load()
 		research_cost = 1.2,
 		required_biome = {},
 		required_race = {},
-		throughput_boosts = {},
+		throughput_boosts = {
+			[prod("blanks-knapping")] = 0.25,
+			[prod("flint-extraction")] = 0.25,
+			[prod("obsidian-extraction")] = 0.25,
+		},
 		input_efficiency_boosts = {},
 		output_efficiency_boosts = {},
 		associated_job = job("quarrymen")
@@ -452,10 +469,12 @@ function d.load()
 		b = 0.23,
 		unlocked_by = { tec("pottery"), tec("dedicated-woodcutters") },
 		research_cost = 0.3,
-		required_resource = { res("quality-clay") },
+		required_resource = {},
 		required_biome = {},
 		required_race = {},
-		throughput_boosts = {},
+		throughput_boosts = {
+			[prod("pottery")] = 0.1
+		},
 		input_efficiency_boosts = {},
 		output_efficiency_boosts = {},
 		associated_job = job("potterers")
@@ -626,7 +645,9 @@ function d.load()
 		required_biome = {},
 		required_resource = {},
 		required_race = {},
-		throughput_boosts = {},
+		throughput_boosts = {
+			[prod("pottery")] = 0.1
+		},
 		input_efficiency_boosts = {},
 		output_efficiency_boosts = {},
 		associated_job = job("potterers")

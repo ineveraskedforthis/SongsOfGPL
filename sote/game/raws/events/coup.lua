@@ -15,7 +15,7 @@ return function()
         name = "attempt-coup",
         fallback = function(self, associated_data) end,
         event_text = function(self, character, associated_data)
-            local province = PROVINCE(character)
+            local province = POP_PROVINCE(character)
             if province == INVALID_ID then return "No coup target." end
             local realm = LOCAL_REALM(character)
             if realm == INVALID_ID then return "No coup target." end
@@ -54,7 +54,7 @@ return function()
 		end,
 		options = function(self, character, associated_data)
             local treason_flag = true
-            local province = PROVINCE(character)
+            local province = POP_PROVINCE(character)
             if province == nil then return
                 {
                     {

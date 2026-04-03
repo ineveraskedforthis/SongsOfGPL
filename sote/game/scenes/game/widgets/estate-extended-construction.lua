@@ -56,14 +56,14 @@ return function (rect, estate)
 
 	---@type pop_id
 	local owner = WORLD.player_character
-	local location = PROVINCE(owner)
+	local location = ESTATE_TILE(owner)
 
 	if estate ~= INVALID_ID then
 		owner = OWNER(estate)
-		location = ESTATE_PROVINCE(estate)
+		location = POP_TILE(owner)
 	end
 
-	local realm = PROVINCE_REALM(location)
+	local realm = PROVINCE_REALM(TILE_PROVINCE(location))
 	local overseer = pv.overseer(realm)
 
 	local is_public_estate = false
@@ -83,10 +83,9 @@ return function (rect, estate)
 
 	local funds = SAVINGS(character)
 	if estate ~= INVALID_ID then
-		funds = SAVINGS(character) + DATA.estate_get_savings(estate)
-		if is_public_estate then
-			funds = DATA.estate_get_savings(estate)
-		end
+		funds = funds + DATA.estate_get_savings(estate)
+	else
+		estate = POP_ESTATE(character)
 	end
 
 	local actual_manager = character
@@ -98,7 +97,7 @@ return function (rect, estate)
 	local table_data = {}
 
 	DATA.for_each_building_type(function (item)
-		local buildable = DATA.province_get_buildable_buildings(location, item) == 1
+		local buildable = DATA.estate_get_buildable_buildings(estate, item) == 1
 		if not buildable then
 			return
 		end
@@ -108,7 +107,7 @@ return function (rect, estate)
 			id = item,
 			can_build = province_utils.can_build(location, funds, item, actual_manager, is_public_estate),
 			cost = ev.building_cost(item, actual_manager, is_public_estate),
-			profit = ev.projected_income_building_type(location, item, HUMAN, false)
+			profit = 0 -- ev.projected_income_building_type(estate, item, HUMAN, false)
 		}
 
 		table.insert(table_data, entry)
@@ -133,7 +132,7 @@ return function (rect, estate)
 		active = true,
 		render_closure = function (rect, k, v)
 			if ut.money_button("", v.cost, rect, nil, v.can_build and can_build) then
-				economy_effects.construct_building_with_payment(v.id, location, owner, actual_manager, is_public_estate)
+				economy_effects.construct_building_with_payment(v.id, estate, owner, actual_manager, is_public_estate)
 			end
 		end,
 		value = function (k, v)

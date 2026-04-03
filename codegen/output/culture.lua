@@ -23,7 +23,7 @@ local ffi = require("ffi")
 ---@field language language_id 
 ---@field traditional_units table<unit_type_id, number> -- Defines "traditional" ratios for units recruited from this culture.
 ---@field traditional_militarization number A fraction of the society that cultures will try to put in military
----@field traditional_forager_targets table<FORAGE_RESOURCE, number> a culture's prefered foraging targets
+---@field traditional_forager_targets table<production_method_id, number> a culture's prefered foraging targets
 
 
 ffi.cdef[[
@@ -58,7 +58,7 @@ DATA.culture_name= {}
 
 DATA.culture_size = 10000
 DCON.dcon_culture_resize_traditional_units(6)
-DCON.dcon_culture_resize_traditional_forager_targets(11)
+DCON.dcon_culture_resize_traditional_forager_targets(251)
 ---@return culture_id
 function DATA.create_culture()
     ---@type culture_id
@@ -201,25 +201,25 @@ function DATA.culture_inc_traditional_militarization(culture_id, value)
     DCON.dcon_culture_set_traditional_militarization(culture_id - 1, current + value)
 end
 ---@param culture_id culture_id valid culture id
----@param index FORAGE_RESOURCE valid
+---@param index production_method_id valid
 ---@return number traditional_forager_targets a culture's prefered foraging targets
 function DATA.culture_get_traditional_forager_targets(culture_id, index)
     assert(index ~= 0)
-    return DCON.dcon_culture_get_traditional_forager_targets(culture_id - 1, index)
+    return DCON.dcon_culture_get_traditional_forager_targets(culture_id - 1, index - 1)
 end
 ---@param culture_id culture_id valid culture id
----@param index FORAGE_RESOURCE valid index
+---@param index production_method_id valid index
 ---@param value number valid number
 function DATA.culture_set_traditional_forager_targets(culture_id, index, value)
-    DCON.dcon_culture_set_traditional_forager_targets(culture_id - 1, index, value)
+    DCON.dcon_culture_set_traditional_forager_targets(culture_id - 1, index - 1, value)
 end
 ---@param culture_id culture_id valid culture id
----@param index FORAGE_RESOURCE valid index
+---@param index production_method_id valid index
 ---@param value number valid number
 function DATA.culture_inc_traditional_forager_targets(culture_id, index, value)
     ---@type number
-    local current = DCON.dcon_culture_get_traditional_forager_targets(culture_id - 1, index)
-    DCON.dcon_culture_set_traditional_forager_targets(culture_id - 1, index, current + value)
+    local current = DCON.dcon_culture_get_traditional_forager_targets(culture_id - 1, index - 1)
+    DCON.dcon_culture_set_traditional_forager_targets(culture_id - 1, index - 1, current + value)
 end
 
 local fat_culture_id_metatable = {

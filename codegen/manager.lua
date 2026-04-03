@@ -63,21 +63,7 @@ ffi.cdef[[
     float estimate_building_type_income(int32_t, int32_t, int32_t, bool);
     void dcon_everything_write_file(char const* name);
     void dcon_everything_read_file(char const* name);
-    void update_foraging_data(
-		int32_t province_raw_id,
-		int32_t water_raw_id,
-		int32_t berries_raw_id,
-		int32_t grain_raw_id,
-		int32_t bark_raw_id,
-		int32_t timber_raw_id,
-		int32_t meat_raw_id,
-		int32_t hide_raw_id,
-		int32_t mushroom_raw_id,
-		int32_t shellfish_raw_id,
-		int32_t seaweed_raw_id,
-		int32_t fish_raw_id,
-		int32_t world_size
-	);
+    void update_foraging_data(uint32_t world_size);
 
     void load_state(char const*);
     int32_t dcon_reset();
@@ -111,7 +97,7 @@ ffi.cdef[[
 	float job_efficiency(uint32_t,uint8_t);
     // pop time calculations
 	float pop_free_time(uint32_t pop);
-	float pop_warband_time(uint32_t pop,float free);
+	float pop_travel_time(uint32_t pop,float free);
 	float pop_forage_time(uint32_t pop,float free,float party);
 	float pop_work_time(uint32_t pop,float free,float party,float forage);
 	// misc
@@ -122,7 +108,7 @@ ffi.cdef[[
 
 
 DATA = require "codegen.output.generated"
-require "codegen.output.helpers"
+require "codegen.helpers"
 
 local state_save_path = love.filesystem.getSaveDirectory() .. "_sote_save.binbeaver"
 function SAVE_GAME_STATE()

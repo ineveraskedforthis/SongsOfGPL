@@ -54,7 +54,7 @@ function load()
         ---@param root Character
         ---@param data Character
         function (root, data)
-            local province = LOCAL_PROVINCE(root)
+            local province = POP_PROVINCE(root)
             local name = DATA.province_get_name(province);
             return "Truely a wonderful day in " .. name .. "!"
         end,

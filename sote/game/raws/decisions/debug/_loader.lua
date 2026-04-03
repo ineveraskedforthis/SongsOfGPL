@@ -35,7 +35,7 @@ return function()
 		effect = function(root, primary_target, secondary_target)
 			---@type Character
 			local root = root
-			local province = PROVINCE(root)
+			local province = POP_PROVINCE(root)
 			if province == INVALID_ID then return end
 			DATA.pop_inc_savings(root, 1000)
 			if WORLD:does_player_see_realm_news(PROVINCE_REALM(province)) then

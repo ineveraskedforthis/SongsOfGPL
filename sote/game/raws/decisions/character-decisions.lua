@@ -20,7 +20,7 @@ local function load()
 			if LEADER(LOCAL_REALM(root)) == root then
 				return false
 			end
-			if CAPITOL(LOCAL_REALM(root)) ~= PROVINCE(root) then
+			if CAPITOL(LOCAL_REALM(root)) ~= POP_PROVINCE(root) then
 				return false
 			end
 			if LOCAL_REALM(root)~= REALM(root)then

@@ -1,5 +1,4 @@
 local tabb = require "engine.table"
-local tile = require "game.entities.tile"
 local province_utils = require "game.entities.province".Province
 
 local retrieve_good = require "game.raws.raws-utils".trade_good
@@ -12,25 +11,16 @@ function dbm.culture_target_tooltip(culture)
 	local ut = require "game.ui-utils"
 	local result = "\n · Gathering (in % of total foraging time): \n"
 
-	DATA.for_each_forage_resource(function (item)
+	DATA.for_each_production_method(function (item)
 		local ratio = DATA.culture_get_traditional_forager_targets(culture, item)
-		result = result .. "\n    · "
-			.. DATA.forage_resource_get_description(item)
-			.. " (" .. ut.to_fixed_point2(ratio * 100) .. "%)"
+		if ratio > 0.001 then
+			result = result .. "\n    · "
+				.. DATA.production_method_get_name(item)
+				.. " (" .. ut.to_fixed_point2(ratio * 100) .. "%)"
+		end
 	end)
 
 	return result
-end
-
----@param race race_id
----@param jobtype JOBTYPE
----@return number efficiency scalar multiplier
-function dbm.mean_race_job_efficiency(race, jobtype)
-	local males_ratio = DATA.race_get_males_per_hundred_females(race)
-    local male_to_female_ratio = males_ratio / (100 + males_ratio)
-    return
-		male_to_female_ratio * DATA.race_get_male_efficiency(race, jobtype)
-		+ (1 - male_to_female_ratio) * DATA.race_get_female_efficiency(race, jobtype)
 end
 
 ---@param carrying_capacity number
@@ -45,185 +35,67 @@ function dbm.foraging_efficiency(carrying_capacity, foragers)
 end
 
 ---@param tile_id tile_id
+---@return number hydration
 ---@return number primary_production
+---@return number game_production
 ---@return number marine_production
 ---@return number wood_production
----@return number effective_temperature
 function dbm.total_production(tile_id)
-	local  _, warmest, _, coldest = tile.get_climate_data(tile_id)
-	if coldest > warmest then
-		---@type number, number
-		warmest, coldest = coldest, warmest
-	end
-
-	local grass = DATA.tile_get_grass(tile_id)
-	local shrub = DATA.tile_get_shrub(tile_id)
-	local broadleaf = DATA.tile_get_broadleaf(tile_id)
-	local conifer = DATA.tile_get_conifer(tile_id)
-
-
-	local effective_temperature = (18 * warmest - 10 * coldest) / (warmest - coldest + 8)
-	local temperture_weighting =  1 / (1 + math.exp(-0.2 * (effective_temperature - 10)))
-	-- weight net production by 'biomass' assimilation efficiency
-	local primary_production = temperture_weighting * (0.5 * grass + 0.4 * shrub + 0.3 * broadleaf + 0.2 * conifer)
-	-- some of assimilation efficiency goes towards structural material: timber
-	local wood_production = temperture_weighting * (0.3 * conifer + 0.2 * broadleaf + 0.1 * shrub)
-	-- check for marine resources
-	local marine_production = 0
-	if DATA.tile_get_has_marsh(tile_id) then
-		marine_production = marine_production + 0.5
-	end
-	if DATA.tile_get_has_river(tile_id) then
-		marine_production = marine_production + 0.5
-	end
-	for i = 1, 4 do
-		if not DATA.tile_get_is_land(tile.get_neighbor(tile_id, i)) then
-			marine_production = marine_production + 0.25
-		end
-	end
-	return primary_production, marine_production, wood_production, effective_temperature
-end
-
----calculate the net primary production (NPP) of a tile, sums to CC
----@param tile_id tile_id
----@return number net_production
----@return number fruit
----@return number seeds
----@return number wood
----@return number shell
----@return number fish
----@return number game
----@return number fungi
-function dbm.net_foraging_production(tile_id)
-	local primary_production, marine_production, wood, effective_temperature =
-		dbm.total_production(tile_id)
-	local fruit, seeds, shell, fish, game = 0, 0, 0, 0, 0
-	if primary_production > 0 then
-		-- determine animal energy from eating folliage and reduce from plant output
-		game = 0.125 * (primary_production + wood)
-		---@type number
-		primary_production = primary_production * 0.875
-		wood = wood * 0.875
-
-		local grass = DATA.tile_get_grass(tile_id)
-		local shrub = DATA.tile_get_shrub(tile_id)
-		local broadleaf = DATA.tile_get_broadleaf(tile_id)
-		local conifer = DATA.tile_get_conifer(tile_id)
-
-		-- determine plant food from remaining pp
-		local fruit_plants = shrub + broadleaf
-		local seed_plants = conifer + grass
-		local flora_total = fruit_plants + seed_plants
-		if flora_total > 0 then
-			local fruit_percentage = 0.5 / (1 + math.exp(-10 * (fruit_plants / flora_total - 0.5)))
-			fruit = primary_production * (0.25 + fruit_percentage)
-			seeds = primary_production * (0.75 - fruit_percentage)
-		end
-	end
-	if marine_production > 0 then
-		-- determine animal energy from marine output
-		game = game + 0.125 * (marine_production)
-		marine_production = marine_production * 0.875
-		-- determine marine food spread from climate
-		local temperature_weight = 0.75 / (1 + math.exp(-0.125*(effective_temperature - 16)))
-		shell = marine_production * (0.25 + temperature_weight * 0.25)
-		fish = marine_production * (0.75 - temperature_weight * 0.25)
-	end
-	local net_production = fruit + seeds + shell + fish + game
-	-- determine energy available in decomposers
-	local fungi = net_production * 0.125
-	return net_production, fruit, seeds, wood, shell, fish, game, fungi
-end
-
----comment
----@param a {net_pp: number, fruit: number, seeds: number, wood: number, shell: number, fish: number, game: number, fungi: number}
----@param _ any
----@param v tile_id
----@return {net_pp: number, fruit: number, seeds: number, wood: number, shell: number, fish: number, game: number, fungi: number}
-function dbm.accumulate_foraging_production(a, _, v)
-	local net_production, fruit, seeds, wood, shell, fish, game, fungi = dbm.net_foraging_production(v)
-	-- get climate weighted resources from production
-	return {
-		net_pp = a.net_pp + net_production,
-		fruit = a.fruit + fruit,
-		seeds = a.seeds + seeds,
-		wood = a.wood + wood,
-		shell = a.shell + shell,
-		fish = a.fish + fish,
-		game = a.game + game,
-		fungi = a.fungi + fungi
-	}
-end
-
---- Returns individual potential amount of foragable good targets
---- from each tile's net primary production (NPP), effective temperature,
---- and flora spread
----@param province province_id
----@return {net_pp: number, fruit: number, seeds: number, wood: number, shell: number, fish: number, game: number, fungi: number}
-function dbm.total_foraging_amounts(province)
-	local accumulate = {net_pp=0 ,fruit=0, seeds=0, wood=0, shell=0, fish=0, game=0, fungi=0}
-	accumulate = tabb.accumulate(
-		tabb.map_array(
-			DATA.get_tile_province_membership_from_province(province),
-			DATA.tile_province_membership_get_tile
-		),
-		accumulate,
-		dbm.accumulate_foraging_production
-	)
-	return accumulate
-end
-
----@param province Province
-function dbm.update_foraging_targets(province)
-	DCON.update_foraging_data(
-		province,
-		retrieve_good("water"),
-		retrieve_good("berries"),
-		retrieve_good("grain"),
-		retrieve_good("bark"),
-		retrieve_good("timber"),
-		retrieve_good("meat"),
-		retrieve_good("hide"),
-		retrieve_good("mushrooms"),
-		retrieve_good("shellfish"),
-		retrieve_good("seaweed"),
-		retrieve_good("fish"),
-		WORLD.world_size
-	)
+	return DATA.tile_get_foragers_targets_limit(tile_id,FORAGE_RESOURCE.WATER),
+		DATA.tile_get_foragers_targets_limit(tile_id,FORAGE_RESOURCE.PLANT),
+		DATA.tile_get_foragers_targets_limit(tile_id,FORAGE_RESOURCE.GAME),
+		DATA.tile_get_foragers_targets_limit(tile_id,FORAGE_RESOURCE.FISH),
+		DATA.tile_get_foragers_targets_limit(tile_id,FORAGE_RESOURCE.WOOD)
 end
 
 ---@alias NeedUseCaseAmount {need: NEED, use_case: use_case_id, amount: number}
 
--- TODO change to target a culture and find mean value across all pops based on race and culture needs
----@param race race_id
+-- get average local needs and efficiencies of local culture
+---@param tile_id tile_id
+---@param culture_id culture_id
 ---@return NeedUseCaseAmount[] food_needs_by_use
-function dbm.cultural_food_needs(race)
-	local males_per_hundred_females = DATA.race_get_males_per_hundred_females(race)
-	local male_to_female_ratio = males_per_hundred_females / (100 + males_per_hundred_females)
-
+---@return table<production_method_id,number> job_efficienceis
+---@return number total_pop
+function dbm.cultural_food_needs(tile_id, culture_id)
 	---@type table<use_case_id, number>
-	local food_needs = {}
+	local food_needs, jobtype_skill, total_pop = {}, {}, 0
 
-	for i = 1, MAX_NEED_SATISFACTION_POSITIONS_INDEX do
-		local need = DATA.race_get_male_needs_need(race, i)
-		local use_case = DATA.race_get_male_needs_use_case(race, i)
-		if (need == NEED.FOOD) then
-			local male_value = DATA.race_get_male_needs_required(race, i)
-			local female_value = DATA.race_get_female_needs_required(race,i)
-			local average_gendered_use_case_need =
-				male_value * male_to_female_ratio
-				+ (1 - male_to_female_ratio) * female_value
-
-			-- overestimate needed water:
-			if use_case == WATER_USE_CASE then
-				average_gendered_use_case_need = average_gendered_use_case_need * 1.5
+	DATA.for_each_estate_location_from_tile(tile_id, function (location)
+		local estate = DATA.estate_location_get_estate(location)
+		DATA.for_each_estate_unit_from_estate(estate, function (item)
+			local pop_id = DATA.estate_unit_get_pop(item)
+			if DATA.pop_get_culture(pop_id) == culture_id then
+				total_pop = total_pop + 1
+				-- food needs
+				for i = 1, MAX_NEED_SATISFACTION_POSITIONS_INDEX do
+					local need = DATA.pop_get_need_satisfaction_need(pop_id, i)
+					if (need == NEED.FOOD) then
+						local use_case = DATA.pop_get_need_satisfaction_use_case(pop_id, i)
+						local amount = DATA.pop_get_need_satisfaction_demanded(pop_id, i)
+						-- overestimate needed water:
+						if use_case == WATER_USE_CASE then
+							amount = amount * 1.5
+						end
+						food_needs[use_case] = (food_needs[use_case] or 0) + amount
+					end
+				end
+				-- job efficiency
+				DATA.for_each_jobtype(function (item)
+					jobtype_skill[item] = (jobtype_skill[item] or 0) + JOB_EFFICIENCY(pop_id,item)
+				end)
 			end
+		end)
+	end)
 
-			table.insert(food_needs, {use_case = use_case, need = need, amount = average_gendered_use_case_need})
-		end
+	local food_needs_by_use = {}
+	for i, j in pairs(food_needs) do
+		table.insert(food_needs_by_use, {use_case = i, need = NEED.FOOD, amount = j/total_pop})
+	end
+	for i, j in pairs(jobtype_skill) do
+		jobtype_skill[i] = j / total_pop
 	end
 
-	return food_needs
+	return food_needs_by_use, jobtype_skill, total_pop
 end
 
 
@@ -242,7 +114,24 @@ end
 ---@field total_handle_time number
 ---@field total_energy_output number
 ---@field average_energy_return_per_unit_of_time number
----@field data_per_forage_target TargetResourceTable[]
+---@field data_per_forage_target table<production_method_id, TargetResourceTable>
+
+---finds potential foraging targets for tile with efficiencies
+---@param tile_id any
+---@return table<production_method_id,number>
+function dbm.local_foraging_methods(tile_id)
+	local methods = {}
+	DATA.for_each_production_method(
+		function (production_method)
+			local foraging = DATA.production_method_get_foraging(production_method)
+			if foraging ~= FORAGE_RESOURCE.INVALID
+				and DATA.tile_get_foragers_targets_limit(tile_id,foraging) > 0
+			then
+				methods[production_method] = DATA.tile_get_foragers_targets_limit(tile_id,foraging)
+			end
+		end)
+	return methods
+end
 
 ---commenting
 ---@param good trade_good_id
@@ -251,68 +140,74 @@ end
 ---@return number
 local function turn_output_to_energy(good, use_case, amount)
 	local weight = USE_WEIGHT[good][use_case]
+	-- print("  GOOD: " .. DATA.trade_good_get_name(good) .. ", AMOUNT: " .. amount .. ", WEIGHT: " .. weight .. ", ENERGY: " .. (weight * amount))
 	return weight * amount
---	print("       VALID GOOD: " .. good .. ", AMOUNT: " .. values.amount .. ", OUTPUT: " .. weighted_output .. ", ENERGY: " .. weighted_output * values.amount)
 end
 
 ---commenting
----@param race race_id
----@param province province_id
+---@param foraging_methods table<production_method_id,number>
+---@param efficiencies table<production_method_id,number>
+---@param tile_id tile_id
 ---@param use_case use_case_id
 ---@param needed number
 ---@return TargetNeedsTable
-local function forage_targets_for_a_given_use_case(race, province, use_case, needed)
---		print("    USE: " .. use .. ", NEEDED: " .. needed)
-	local province_size = DATA.province_get_size(province)
+local function forage_targets_for_a_given_use_case(foraging_methods, efficiencies, tile_id, use_case, needed)
+	-- print("USE: " .. DATA.use_case_get_name(use_case) .. ", NEEDED: " .. needed)
+	-- have tile size variable, lat lon calculated?
+	local tile_size = 10
 
 	local total_search = 0
 	local total_output = 0
 	local total_handle = 0
 	local total_energy_output = 0
 
-	---@type TargetResourceTable[]
+	---@type table<production_method_id,TargetResourceTable>
 	local data_per_forage_target = {}
 
-	-- print("update use case", use_case)
-
-	for i = 1, MAX_RESOURCES_IN_PROVINCE_INDEX do
-		local forage_case = DATA.province_get_foragers_targets_forage(province, i)
-		local required_job = DATA.forage_resource_get_handle(forage_case)
-		local amount = DATA.province_get_foragers_targets_amount(province, i)
-		local output_good = DATA.province_get_foragers_targets_output_good(province, i)
-		local output_value = DATA.province_get_foragers_targets_output_value(province, i)
-
-		if output_good == INVALID_ID then
-			break
+	-- for each production method...
+	for method, value in pairs(foraging_methods) do
+		local forage_case = DATA.production_method_get_foraging(method)
+		local required_job = DATA.production_method_get_job_type(method)
+		-- get production output in use case
+		local energy = 0
+		for i = 1, MAX_SIZE_ARRAYS_PRODUCTION_METHOD do
+			local output_good = DATA.production_method_get_outputs_good(method, i)
+			local output_amount = DATA.production_method_get_outputs_amount(method, i)
+			if output_good == INVALID_ID then
+				break
+			end
+			-- get production output in use case
+			energy = energy + turn_output_to_energy(output_good, use_case, output_amount) -- per collected unit
 		end
 
 		-- print("forage resource")
 
 		---@type number
-		local energy = turn_output_to_energy(output_good, use_case, output_value) -- per collected unit
-		local search_time = province_size -- total searching time to find everything
-		local efficiency = dbm.mean_race_job_efficiency(race, required_job) -- efficiency of actually collecting the thing
-		local handle_time = amount / efficiency -- time spent to collect everything
-		local total_energy = energy * amount -- total collected "energy"
+		-- calculate based on speed and/or terrain?
+		local search_time = tile_size -- total searching time to find everything
+		local efficiency = efficiencies[required_job] -- efficiency of actually collecting the thing
+		local handle_time = value / efficiency -- time spent to collect everything
+		local total_energy = energy * value -- total collected "energy"
 
 		assert(handle_time == handle_time, tostring(handle_time))
-		assert(efficiency > 0, tostring(efficiency) .. " " .. DATA.race_get_name(race) .. " " .. DATA.jobtype_get_name(required_job))
+		assert(efficiency > 0, tostring(efficiency) .. DATA.jobtype_get_name(required_job) .. efficiency)
 
-		data_per_forage_target[i] = {
+		data_per_forage_target[method] = {
 			forage_resource = forage_case,
 			search_time = search_time,
 			handle_time = handle_time,
-			output = amount,
+			output = value,
 			output_energy = total_energy,
 			energy_return_per_unit_of_time = total_energy / (search_time + handle_time)
 		}
+		-- print(DATA.forage_resource_get_name(forage_case),search_time, handle_time, value, total_energy,total_energy / (search_time + handle_time))
 
 		---@type number
 		total_search = total_search + search_time
 		---@type number
 		total_handle = total_handle + handle_time
 		---@type number
-		total_output = total_output + amount
+		total_output = total_output + value
 		---@type number
 		total_energy_output = total_energy_output + total_energy
 	end
@@ -327,6 +222,7 @@ local function forage_targets_for_a_given_use_case(race, province, use_case, nee
 		average_energy_return_per_unit_of_time = total_energy_output / (total_handle + total_search),
 		data_per_forage_target = data_per_forage_target
 	}
+	-- print("",DATA.use_case_get_name(use_case),total_search, total_handle, needed, total_energy_output, total_energy_output / (total_handle + total_search))
 
 	return result
 end
@@ -362,7 +258,6 @@ end
 ---@param use_cases_data TargetNeedsTable[]
 ---@return number[][] weights
 local function calculate_weights(use_cases_data)
-
 	---@type number[][]
 	local weights = {}
 
@@ -437,14 +332,14 @@ local function calculate_weights(use_cases_data)
 				for j, target_data in pairs(targets_table.data_per_forage_target) do
 					weights[i][j] =
 						weights[i][j]
-						+ math.min(0.01,
+						+ math.min(0.01, -- doesn't cut nans in min but would if max
 							(required - provided)
 							* step
 							/ (target_data.handle_time + target_data.search_time + 1)
 							/ (target_data.energy_return_per_unit_of_time + 1)
-							* target_data.output_energy
+							* target_data.output_energy,
+							0.01 -- cuts nans for min but not if max
 						)
-
 					-- assert(weights[i][j] == weights[i][j])
 				end
 			else
@@ -452,15 +347,15 @@ local function calculate_weights(use_cases_data)
 					weights[i][j] = math.max(
 						0,
 						weights[i][j]
-						- math.min(0.01,
+						- math.min(0.01, -- doesn't cut nans in min but would if max
 							(provided - required)
 							* step
 							/ (target_data.handle_time + target_data.search_time + 1)
 							/ (target_data.energy_return_per_unit_of_time + 1)
-							* math.exp(-target_data.output_energy / 1000)
+							* math.exp(-target_data.output_energy / 1000),
+							0.01 -- cuts nans for min but not if max
 						)
 					)
-
 					-- assert(weights[i][j] == weights[i][j],
 					-- 	"(provided - required) " .. tostring(provided - required) ..
 					-- 	"\n* step " .. tostring(step) ..
@@ -487,13 +382,14 @@ local function calculate_weights(use_cases_data)
 	end
 
 	-- tabb.deep_print(weights)
-	assert(norm > 0, norm)
-	sum_of_weights = 0
-	for i, targets_table in pairs(use_cases_data) do
-		for j, target_data in pairs(targets_table.data_per_forage_target) do
-			---@type number
-			weights[i][j] = (weights[i][j] + smoothing) / norm
-			sum_of_weights = sum_of_weights + weights[i][j]
+	if norm > 0 then
+		sum_of_weights = 0
+		for i, targets_table in pairs(use_cases_data) do
+			for j, target_data in pairs(targets_table.data_per_forage_target) do
+				---@type number
+				weights[i][j] = (weights[i][j] + smoothing) / norm
+				sum_of_weights = sum_of_weights + weights[i][j]
+			end
 		end
 	end
 
@@ -502,19 +398,14 @@ end
 
 ---@param use_cases_data TargetNeedsTable[]
 ---@param weights number[][]
----@return table<FORAGE_RESOURCE, number>
+---@return table<production_method_id, number>
 local function weights_to_forage_time_distribution(use_cases_data, weights)
-	---@type table<FORAGE_RESOURCE, number>
+	---@type table<production_method_id, number>
 	local distribution = {}
-
-	DATA.for_each_forage_resource(function (item)
-		distribution[item] = 0
-	end)
 
 	for i, targets_table in pairs(use_cases_data) do
 		for j, target_data in pairs(targets_table.data_per_forage_target) do
-			local forage_resource = target_data.forage_resource
-			distribution[forage_resource] = distribution[forage_resource] + weights[i][j] * (target_data.handle_time + target_data.search_time)
+			distribution[j] = (distribution[j] or 0) + weights[i][j] * (target_data.handle_time + target_data.search_time)
 		end
 	end
 
@@ -523,24 +414,28 @@ end
 
 ---Use Diet-Breadth Model to weight, pick and normalize targets
 --- and search times for when foraging for food and water
----@param province province_id
-function dbm.cultural_foragable_targets(province)
---	print("CULTURE: " .. culture.name)
-	-- get average life needs from realm primary race
-	local realm = province_utils.realm(province)
-	assert(realm ~= nil)
-	local race = DATA.realm_get_primary_race(realm)
-	local food_use_cases_needs = dbm.cultural_food_needs(race)
+---@param tile_id tile_id
+---@param culture_id culture_id
+function dbm.cultural_foragable_targets(tile_id, culture_id)
+	-- get average values from all pop of culture on tile
+	local food_use_cases_needs, local_efficiencies, total_pop = dbm.cultural_food_needs(tile_id,culture_id)
+	if total_pop == 0 then return {}, 0 end
+	-- tabb.deep_print(food_use_cases_needs)
+	-- tabb.deep_print(local_efficiencies)
 
+	-- get available foraging methods for tile
+	local foraging_methods = dbm.local_foraging_methods(tile_id)
+	-- tabb.deep_print(foraging_methods)
 	local food_use_cases_data = tabb.map_array(
 		food_use_cases_needs,
 		function (use_case_amount)
-			return forage_targets_for_a_given_use_case(race, province, use_case_amount.use_case, use_case_amount.amount)
+			return forage_targets_for_a_given_use_case(foraging_methods, local_efficiencies, tile_id, use_case_amount.use_case, use_case_amount.amount)
 		end
 	)
-
+	-- tabb.deep_print(food_use_cases_data)
 	local weights = calculate_weights(food_use_cases_data)
-	return weights_to_forage_time_distribution(food_use_cases_data, weights)
+	-- tabb.deep_print(weights)
+	return weights_to_forage_time_distribution(food_use_cases_data, weights), total_pop
 end
 
 return dbm

@@ -31,7 +31,7 @@ function AiPreferences.percieved_inflation(character)
 
 	base_price = base_price / math.max(count, 1)
 
-	local price = ev.get_local_price_of_use(PROVINCE(character), use)
+	local price = ev.get_local_price_of_use(POP_PROVINCE(character), use)
 	if price == 0 then
 		price = base_price
 	end
@@ -80,8 +80,9 @@ function AiPreferences.best_successor(character)
 	local best_candidate = nil
 	local best_score = 0
 
-	DATA.for_each_character_location_from_location(PROVINCE(character), function (item)
+	DATA.for_each_character_location(function (item)
 		local candidate = DATA.character_location_get_character(item)
+		if POP_PROVINCE(character) ~= POP_PROVINCE(candidate) then return end
 		if best_candidate == nil then
 			best_candidate = candidate
 		else
@@ -241,7 +242,7 @@ end
 ---commenting
 ---@param root Character
 function AiPreferences.sample_random_candidate(root)
-	local p = PROVINCE(root)
+	local p = POP_PROVINCE(root)
 	assert(p ~= INVALID_ID)
 	local candidate = demography_values.sample_character_from_province(p)
 	if candidate == nil then
@@ -252,7 +253,7 @@ end
 
 function AiPreferences.condition_to_sampler(condition)
 	return function (root)
-		local p = PROVINCE(root)
+		local p = POP_PROVINCE(root)
 		assert(p ~= INVALID_ID)
 		local candidate = demography_values.sample_character_from_province(p)
 		if candidate == nil then

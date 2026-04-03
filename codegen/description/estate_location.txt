@@ -1,2 +1,2 @@
-link many province province location of the estate
+link many tile tile location of the estate
 link one estate estate

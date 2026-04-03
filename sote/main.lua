@@ -32,7 +32,7 @@ VERSION_STRING = "v0.3.0 (Midgard)"
 
 SILENT_ASSET_LOADING = false
 
-require "codegen.output.manager"
+require "codegen.manager"
 
 --if WORLD == nil then
 ---@type World|nil

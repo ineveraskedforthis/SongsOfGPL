@@ -23,7 +23,7 @@ local function macrobuilder(gam, tile_id, rect, x, y, size)
 		return
 	end
 	local province = tile_utils.province(tile_id)
-	if PROVINCE(player_character) ~= province then
+	if POP_PROVINCE(player_character) ~= province then
 		return
 	end
 	---@type BuildingType

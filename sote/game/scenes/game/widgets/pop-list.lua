@@ -217,10 +217,10 @@ return function(gam, rect, base_unit, province)
         local top = rect:subrect(0, 0, rect.width, base_unit, "left", "up")
         local bottom = rect:subrect(0, base_unit, rect.width, rect.height - base_unit, "left", "up")
         ui.centered_text("Population", top)
-        local locations = DATA.filter_array_pop_location_from_location(province, function (item)
-            return true
+        local pops = DATA.filter_pop(function (item)
+            return POP_PROVINCE(item) == province
         end)
 
-        ut.table(bottom, tabb.map_array(locations, DATA.pop_location_get_pop), columns, state)
+        ut.table(bottom,pops, columns, state)
     end
 end

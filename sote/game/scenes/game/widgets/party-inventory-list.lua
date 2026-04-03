@@ -47,7 +47,7 @@ return function(game, rect, party, state, title, compact)
 
     ---@type PartyInventoryEntry[]
     local inventory = {}
-    local province = TILE_PROVINCE(WARBAND_TILE(party))
+    local province = TILE_PROVINCE(ESTATE_TILE(party))
     DATA.for_each_trade_good(function (item)
         ---@type PartyInventoryEntry
         local inventory_item = {

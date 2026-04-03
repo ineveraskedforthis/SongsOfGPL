@@ -38,7 +38,7 @@ function PoliticalEffects.coup(character)
 	end
 
 	local capitol = DATA.realm_get_capitol(realm)
-	if capitol ~= PROVINCE(character) then
+	if capitol ~= POP_PROVINCE(character) then
 		return false
 	end
 
@@ -396,11 +396,11 @@ function PoliticalEffects.mood_shift_from_wealth_shift(province, wealth)
 end
 
 ---comment
----@param province Province
+---@param estate estate_id
 ---@param reason POLITICS_REASON
 ---@return Character?
-function PoliticalEffects.grant_nobility_to_random_pop(province, realm, reason)
-	local item = tabb.random_select_from_array(DATA.filter_array_home_from_home(province, function (item)
+function PoliticalEffects.grant_nobility_to_random_pop(estate, realm, reason)
+	local item = tabb.random_select_from_array(DATA.filter_array_home_from_home(estate, function (item)
 		local pop = DATA.home_get_pop(item)
 		if IS_CHARACTER(pop) then
 			return false
@@ -408,7 +408,7 @@ function PoliticalEffects.grant_nobility_to_random_pop(province, realm, reason)
 		if AGE_YEARS(pop) > DATA.race_get_teen_age(RACE(pop)) then
 			return false
 		end
-		if PROVINCE(pop) ~= province then
+		if POP_PROVINCE(pop) ~= province then
 			return false
 		end
 		return true
@@ -424,12 +424,13 @@ end
 
 ---comment
 ---@param realm Realm
----@param province Province
+---@param estate estate_id
 ---@param race Race
 ---@param faith faith_id
 ---@param culture culture_id
+---@param rite rite_id
 ---@return Character
-function PoliticalEffects.generate_new_noble(realm, province, race, faith, culture, rite)
+function PoliticalEffects.generate_new_noble(realm, estate, race, faith, culture, rite)
 	local fat_race = DATA.fatten_race(race)
 
 	local character = pop_utils.new(
@@ -449,8 +450,8 @@ function PoliticalEffects.generate_new_noble(realm, province, race, faith, cultu
 
 	roll_traits(character)
 	SET_REALM(character, realm)
-	province_utils.add_character(province, character)
-	province_utils.set_home(province, character)
+	province_utils.add_character(estate, character, UNIT_TYPE.CIVILIAN)
+	province_utils.set_home(estate, character)
 
 	return character
 end

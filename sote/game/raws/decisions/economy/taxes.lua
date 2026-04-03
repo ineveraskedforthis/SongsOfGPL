@@ -16,7 +16,7 @@ return function ()
 			---@type TributeCollection
 			local associated_data = {
 				origin = REALM(root),
-				target = PROVINCE_REALM(LOCAL_PROVINCE(root)),
+				target = PROVINCE_REALM(POP_PROVINCE(root)),
 				tribute = 0,
 				trade_goods_tribute = {}
 			}
@@ -28,7 +28,7 @@ return function ()
 			)
 		end,
 		function(root)
-			return DATA.realm_get_budget_budget(PROVINCE_REALM(LOCAL_PROVINCE(root)), BUDGET_CATEGORY.TRIBUTE) / 20
+			return DATA.realm_get_budget_budget(PROVINCE_REALM(POP_PROVINCE(root)), BUDGET_CATEGORY.TRIBUTE) / 20
 		end
 	)
 

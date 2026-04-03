@@ -11,17 +11,17 @@ local MigrationEffects = {}
 ---commenting
 ---@param character Character
 function MigrationEffects.start_migration(character)
-	local province = PROVINCE(character)
+	local province = POP_PROVINCE(character)
 	local realm = REALM(character)
 
 	military_effects.gather_warband(character)
 	military_effects.dissolve_guard(realm)
 
 	--- move all available pops to the leader's warband as units
-	---@type pop_location_id[]
-	local pop_locations = {}
-	DATA.for_each_pop_location_from_location(province, function (item)
-		table.insert(pop_locations, item)
+	---@type estate_unit_id[]
+	local estate_units = {}
+	DATA.for_each_estate_unit_from_location(province, function (item)
+		table.insert(estate_units, item)
 	end)
 
 	---@type home_id[]
@@ -39,13 +39,13 @@ function MigrationEffects.start_migration(character)
 	for _, item in pairs(homes) do
 		DATA.delete_home(item)
 	end
-	for _, item in pairs(pop_locations) do
-		local pop = DATA.pop_location_get_pop(item)
-		demography_effects.recruit(pop, LEADER_OF_WARBAND(character), UNIT_TYPE.CIVILIAN)
+	for _, item in pairs(estate_units) do
+		local pop = DATA.estate_unit_get_pop(item)
+		demography_effects.recruit(pop, LEADER_OF_ESTATE(character), UNIT_TYPE.CIVILIAN)
 	end
 	for _, item in pairs(character_locations) do
 		local pop = DATA.character_location_get_character(item)
-		demography_effects.recruit(pop, LEADER_OF_WARBAND(character), UNIT_TYPE.CIVILIAN)
+		demography_effects.recruit(pop, LEADER_OF_ESTATE(character), UNIT_TYPE.CIVILIAN)
 	end
 
 	---allow to move buildings and techs with warbands later
@@ -61,9 +61,9 @@ end
 ---@param character Character
 function MigrationEffects.settle_down(character, become_owner)
 	local migrating_realm = REALM(character)
-	local migrating_host = LEADER_OF_WARBAND(character)
+	local migrating_host = LEADER_OF_ESTATE(character)
 
-	local target = LOCAL_PROVINCE(character)
+	local target = POP_PROVINCE(character)
 	local target_realm = PROVINCE_REALM(target)
 
 	if target_realm ~= INVALID_ID then

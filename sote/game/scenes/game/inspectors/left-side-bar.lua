@@ -88,7 +88,7 @@ function inspector.draw(gam)
         end,
         ["warband"] = function ()
             if WORLD.player_character == INVALID_ID then return false end
-            if LEADER_OF_WARBAND(WORLD.player_character) ~= INVALID_ID then return true end
+            if LEADER_OF_ESTATE(WORLD.player_character) ~= INVALID_ID then return true end
             if office_triggers.guard_leader(WORLD.player_character, REALM(WORLD.player_character)) then return true end
             return false
         end,

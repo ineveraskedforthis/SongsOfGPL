@@ -31,7 +31,7 @@ local function is_visible()
 	if player == INVALID_ID then
 		return false
 	end
-	local province = PROVINCE(player)
+	local province = POP_PROVINCE(player)
 	if province == INVALID_ID then
 		return false
 	end
@@ -63,7 +63,8 @@ function inspector.draw(gamescene)
 
 	---@type pop_id
 	local player = WORLD.player_character
-	local province = LOCAL_PROVINCE(player)
+	local tile_id = POP_TILE(player)
+	local province = POP_PROVINCE(player)
 
 	local base = ut.BASE_HEIGHT
 
@@ -112,9 +113,8 @@ function inspector.draw(gamescene)
 	local local_estate = INVALID_ID
 	DATA.for_each_ownership_from_owner(player, function (item)
 		local estate = DATA.ownership_get_estate(item)
-		local estate_location = DATA.get_estate_location_from_estate(estate)
-		local estate_province = DATA.estate_location_get_province(estate_location)
-		if estate_province == province then
+		local estate_tile = ESTATE_TILE(estate)
+		if estate_tile == tile_id then
 			local_estate = estate
 		end
 	end)

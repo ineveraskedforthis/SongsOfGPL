@@ -9,20 +9,20 @@ local message_effects = require "game.raws.effects.messages"
 
 local pop_utils = require "game.entities.pop".POP
 local province_utils = require "game.entities.province".Province
-local warband_utils = require "game.entities.warband"
+local party_utils = require "game.entities.warband"
 
 local EconomicEffects = {}
 
 --- consumes `days` worth amount of supplies
 --- returns ratio consumed / desired
----@param party warband_id
+---@param estate estate_id
 ---@param days number
 ---@return number
-function EconomicEffects.consume_supplies(party, days)
-	local daily_consumption = warband_utils.daily_supply_consumption(party)
+function EconomicEffects.consume_supplies(estate, days)
+	local daily_consumption = party_utils.daily_supply_consumption(estate)
 	local consumption = days * daily_consumption
 
-	local consumed = EconomicEffects.consume_use_case_for_party(party, CALORIES_USE_CASE, consumption)
+	local consumed = EconomicEffects.consume_use_case_for_estate(estate, CALORIES_USE_CASE, consumption)
 
 	-- give some wiggle room for floats
 	if consumption == 0 then
@@ -98,11 +98,11 @@ function EconomicEffects.add_pop_savings(pop, x, reason)
 end
 
 ---Change party savings
----@param party warband_id
+---@param party estate_id
 ---@param x number
 ---@param reason ECONOMY_REASON
 function EconomicEffects.add_party_savings(party, x, reason)
-	local savings = DATA.warband_get_treasury(party)
+	local savings = DATA.estate_get_savings(party)
 
 	if savings + x < 0 then
 		print("Attempt to reduce savings below zero. Probably a rounding error? Preventing it anyway.", savings, x)
@@ -110,9 +110,9 @@ function EconomicEffects.add_party_savings(party, x, reason)
 		x = -savings
 	end
 
-	DATA.warband_inc_treasury(party, x)
+	DATA.estate_inc_savings(party, x)
 
-	if DATA.warband_get_treasury(party) ~= DATA.warband_get_treasury(party) then
+	if DATA.estate_get_savings(party) ~= DATA.estate_get_savings(party) then
 		error("BAD POP SAVINGS INCREASE: " .. tostring(x) .. " " .. reason)
 	end
 end
@@ -280,20 +280,12 @@ end
 ---@param province province_id
 ---@param owner POP
 ---@return Building
-function EconomicEffects.construct_building(building_type, province, owner)
-	---@type estate_id
-	local estate = INVALID_ID
-
-	DATA.for_each_ownership_from_owner(owner, function (item)
-		local owned_estate = DATA.ownership_get_estate(item)
-		if ESTATE_PROVINCE(owned_estate) == province then
-			estate = owned_estate
-		end
-	end)
+function EconomicEffects.construct_building(building_type, estate, owner)
+	local tile = ESTATE_TILE(estate)
 
 	if estate == INVALID_ID then
 		estate = DATA.create_estate()
-		DATA.force_create_estate_location(province, estate)
+		DATA.force_create_estate_location(POP_TILE(owner), estate)
 		if (owner ~= INVALID_ID) then
 			DATA.force_create_ownership(estate, owner)
 		end
@@ -304,6 +296,7 @@ function EconomicEffects.construct_building(building_type, province, owner)
 	DATA.force_create_building_estate(estate, result_building)
 
 	local name_building = DATA.building_type_get_name(building_type)
+	local province = TILE_PROVINCE(ESTATE_TILE(estate))
 	local province_name = DATA.province_get_name(province)
 
 	if WORLD:does_player_see_province_news(province) then
@@ -341,17 +334,17 @@ end
 
 ---comment
 ---@param building_type BuildingType
----@param province province_id
+---@param estate estate_id
 ---@param owner POP
 ---@param overseer POP
 ---@param public boolean
 ---@return Building
-function EconomicEffects.construct_building_with_payment(building_type, province, owner, overseer, public)
+function EconomicEffects.construct_building_with_payment(building_type, estate, owner, overseer, public)
 	local construction_cost = ev.building_cost(building_type, overseer, public)
-	local building = EconomicEffects.construct_building(building_type, province, owner)
+	local building = EconomicEffects.construct_building(building_type, estate, owner)
 
 	if public or (owner == nil) then
-		EconomicEffects.change_treasury(province_utils.realm(province), -construction_cost, ECONOMY_REASON.BUILDING)
+		EconomicEffects.change_treasury(PROVINCE_REALM(ESTATE_PROVINCE(estate)), -construction_cost, ECONOMY_REASON.BUILDING)
 	else
 		EconomicEffects.add_pop_savings(owner, -construction_cost, ECONOMY_REASON.BUILDING)
 	end
@@ -600,12 +593,12 @@ end
 
 --- Consumes up to amount of use case from inventory in equal parts to available.
 --- Returns total amount able to be satisfied.
----@param pop pop_id
+---@param estate estate_id
 ---@param use_case use_case_id
 ---@param amount number
 ---@return number consumed
-function EconomicEffects.consume_use_case_for_party(party, use_case, amount)
-	local supply = ev.available_use_case_for_party(party, use_case)
+function EconomicEffects.consume_use_case_for_estate(estate, use_case, amount)
+	local supply = ev.available_use_case_for_estate(estate, use_case)
 	if supply <= 0 then
 		return 0
 	end
@@ -615,7 +608,7 @@ function EconomicEffects.consume_use_case_for_party(party, use_case, amount)
 	local consumed = tabb.accumulate(DATA.get_use_weight_from_use_case(use_case), 0, function(a, _, weight_id)
 		local good = DATA.use_weight_get_trade_good(weight_id)
 		local weight = DATA.use_weight_get_weight(weight_id)
-		local good_in_inventory = DATA.warband_get_inventory(party, good)
+		local good_in_inventory = DATA.estate_get_inventory(estate, good)
 		if good_in_inventory > 0 then
 			local available = good_in_inventory * weight
 			local satisfied = available / supply * amount
@@ -640,7 +633,7 @@ function EconomicEffects.consume_use_case_for_party(party, use_case, amount)
 					.. tostring(used)
 				)
 			end
-			DATA.warband_set_inventory(party, good, math.max(0, DATA.warband_get_inventory(party, good) - used))
+			DATA.estate_set_inventory(estate, good, math.max(0, DATA.estate_get_inventory(estate, good) - used))
 			a = a + satisfied
 		end
 		return a
@@ -662,7 +655,7 @@ end
 ---@param use use_case_id
 ---@param amount number
 function EconomicEffects.character_buy_use(character, use, amount)
-	local province = PROVINCE(character)
+	local province = POP_PROVINCE(character)
 	local savings = DATA.pop_get_savings(character)
 	local can_buy, _ = et.can_buy_use(province, savings, use, amount)
 	if not can_buy then
@@ -805,51 +798,51 @@ end
 ---attempt to move a given amount of a trade good from pop to party
 ---, negative values attempt to transfer from party to pop
 ---@param pop_id pop_id
----@param party_id warband_id
+---@param party_id estate_id
 ---@param trade_good_id trade_good_id
 ---@param amount number
 function EconomicEffects.pop_transfer_good_to_party(pop_id,party_id,trade_good_id,amount)
 	-- can only transfer if at the same location, settlement or tile if outside settlement
-	local party_tile = WARBAND_TILE(party_id)
+	local party_tile = ESTATE_TILE(party_id)
 	local party_province = TILE_PROVINCE(party_tile)
-	local pop_province = PROVINCE(pop_id)
+	local pop_province = POP_PROVINCE(pop_id)
 	local in_settlement = IN_SETTLEMENT(party_id)
 	if (in_settlement and pop_province ~= party_province)
-		or (not in_settlement and pop_province == INVALID_ID and party_tile ~= WARBAND_TILE(UNIT_OF(pop_id)))
+		or (not in_settlement and pop_province == INVALID_ID and party_tile ~= ESTATE_TILE(UNIT_OF(pop_id)))
 	then
 		return false
 	end
 
 	-- limit transfer by pop and party inventories
 	local pop_amount = DATA.pop_get_inventory(pop_id,trade_good_id)
-	local party_amount = DATA.warband_get_inventory(party_id,trade_good_id)
+	local party_amount = DATA.estate_get_inventory(party_id,trade_good_id)
 	local consumed_amount = amount > 0 and math.min(amount, pop_amount)
 		or math.max(amount, -party_amount)
 
 	--MAKE TRANSACTION
 	DATA.pop_inc_inventory(pop_id, trade_good_id, -consumed_amount)
-	DATA.warband_inc_inventory(party_id, trade_good_id, consumed_amount)
+	DATA.estate_inc_inventory(party_id, trade_good_id, consumed_amount)
 
 	-- notify if not giving to own party
 	if WORLD:does_player_see_province_news(pop_province) and UNIT_OF(pop_id) ~= party_id then
 		WORLD:emit_notification(NAME(pop_id) .. " gave " .. ut.to_fixed_point2(consumed_amount)
-			.. " " .. DATA.trade_good_get_name(trade_good_id) .. " to " .. WARBAND_NAME(party_id))
+			.. " " .. DATA.trade_good_get_name(trade_good_id) .. " to " .. ESTATE_NAME(party_id))
 	end
 end
 
 ---attempt to move a given amount of a use case from pop to party
 ---, negative values attempt to transfer from party to pop
 ---@param pop_id pop_id
----@param party_id warband_id
+---@param party_id estate_id
 ---@param use_case_id use_case_id
 ---@param amount number
 function EconomicEffects.pop_transfer_use_to_party(pop_id,party_id,use_case_id,amount)
-	local party_tile = WARBAND_TILE(party_id)
+	local party_tile = ESTATE_TILE(party_id)
 	local party_province = TILE_PROVINCE(party_tile)
-	local pop_province = PROVINCE(pop_id)
+	local pop_province = POP_PROVINCE(pop_id)
 	local in_settlement = IN_SETTLEMENT(party_id)
 	if (in_settlement and pop_province ~= party_province)
-		or (not in_settlement and pop_province == INVALID_ID and party_tile ~= WARBAND_TILE(UNIT_OF(pop_id)))
+		or (not in_settlement and pop_province == INVALID_ID and party_tile ~= ESTATE_TILE(UNIT_OF(pop_id)))
 	then
 		return false
 	end
@@ -863,7 +856,7 @@ function EconomicEffects.pop_transfer_use_to_party(pop_id,party_id,use_case_id,a
 		local good = DATA.use_weight_get_trade_good(weight_id)
 		local weight = DATA.use_weight_get_weight(weight_id)
 		local goods_available = amount > 0 and DATA.pop_get_inventory(pop_id, good)
-			or DATA.warband_get_inventory(party_id, good)
+			or DATA.estate_get_inventory(party_id, good)
 		if goods_available > 0 then
 			goods[#goods + 1] = { good = good, weight = weight, available = goods_available }
 		end
@@ -903,9 +896,9 @@ function EconomicEffects.pop_transfer_use_to_party(pop_id,party_id,use_case_id,a
 		-- we need to get back to use "units" so we multiply consumed amount back by weight
 
 		--MAKE TRANSACTION
-		local party_inventory = DATA.warband_get_inventory(party_id,values.good)
+		local party_inventory = DATA.estate_get_inventory(party_id,values.good)
 		DATA.pop_set_inventory(pop_id, values.good, math.max(0,values.available - consumed_amount))
-		DATA.warband_set_inventory(party_id, values.good, math.max(0,party_inventory + consumed_amount))
+		DATA.estate_set_inventory(party_id, values.good, math.max(0,party_inventory + consumed_amount))
 	end
 	if total_transfer < amount * 0.7 or total_transfer > amount * 1.3 then
 		print("Potentially invalid attempt to sell use case for the party"
@@ -923,19 +916,19 @@ function EconomicEffects.pop_transfer_use_to_party(pop_id,party_id,use_case_id,a
 	if WORLD:does_player_see_province_news(pop_province) and UNIT_OF(pop_id) ~= party_id then
 		WORLD:emit_notification(
 			NAME(pop_id) .. " gave " .. ut.to_fixed_point2(total_transfer) .. " " .. DATA.use_case_get_name(use_case_id)
-			.. " to " .. WARBAND_NAME(party_id)
+			.. " to " .. ESTATE_NAME(party_id)
 		)
 	end
 end
 
 ---attempts to buy trade good to market to party inventory
----@param party warband_id
+---@param party estate_id
 ---@param good trade_good_id
 ---@param amount number
 function EconomicEffects.party_buy_good(party,good,amount)
-	local leader = warband_utils.active_leader(party)
-	local province = TILE_PROVINCE(WARBAND_TILE(party))
-	local savings = WARBAND_SAVINGS(party)
+	local leader = party_utils.active_leader(party)
+	local province = TILE_PROVINCE(ESTATE_TILE(party))
+	local savings = ESTATE_SAVINGS(party)
 	local available = DATA.province_get_local_storage(province,good)
 	if not IN_SETTLEMENT(party) or available <= 0 or savings <= 0 then
 		return false
@@ -970,7 +963,7 @@ function EconomicEffects.party_buy_good(party,good,amount)
 	DATA.province_inc_trade_wealth(province, income)
 	EconomicEffects.add_party_savings(party, -income, ECONOMY_REASON.TRADE)
 
-	DATA.warband_inc_inventory(party, good, consumed_amount)
+	DATA.estate_inc_inventory(party, good, consumed_amount)
 	EconomicEffects.change_local_stockpile(province, good, -consumed_amount)
 
 	local trade_volume =
@@ -984,7 +977,7 @@ function EconomicEffects.party_buy_good(party,good,amount)
 
 	if WORLD:does_player_see_province_news(province) then
 		WORLD:emit_notification(
-			WARBAND_NAME(party)
+			ESTATE_NAME(party)
 			.. " bought " .. ut.to_fixed_point2(consumed_amount)	.. " " .. DATA.trade_good_get_name(good)
 			.. " from the " .. PROVINCE_NAME(province)
 			.. " market for " .. ut.to_fixed_point2(income)
@@ -994,14 +987,14 @@ function EconomicEffects.party_buy_good(party,good,amount)
 end
 
 ---attempts to sell trade good to market from party inventory
----@param party warband_id
+---@param party estate_id
 ---@param good trade_good_id
 ---@param amount number
 function EconomicEffects.party_sell_good(party,good,amount)
-	local leader = warband_utils.active_leader(party)
-	local province = TILE_PROVINCE(WARBAND_TILE(party))
+	local leader = party_utils.active_leader(party)
+	local province = TILE_PROVINCE(ESTATE_TILE(party))
 	local trade_wealth = DATA.province_get_trade_wealth(province)
-	local available = DATA.warband_get_inventory(party,good)
+	local available = DATA.estate_get_inventory(party,good)
 	if not IN_SETTLEMENT(party) or available <= 0 or trade_wealth <= 0 then
 		return false
 	end
@@ -1035,7 +1028,7 @@ function EconomicEffects.party_sell_good(party,good,amount)
 	DATA.province_inc_trade_wealth(province, -income)
 	EconomicEffects.add_party_savings(party, income, ECONOMY_REASON.TRADE)
 
-	DATA.warband_inc_inventory(party, good, -consumed_amount)
+	DATA.estate_inc_inventory(party, good, -consumed_amount)
 	EconomicEffects.change_local_stockpile(province, good, consumed_amount)
 
 	local trade_volume =
@@ -1049,7 +1042,7 @@ function EconomicEffects.party_sell_good(party,good,amount)
 
 	if WORLD:does_player_see_province_news(province) then
 		WORLD:emit_notification(
-			WARBAND_NAME(party)
+			ESTATE_NAME(party)
 			.. " sold " .. ut.to_fixed_point2(consumed_amount)	.. " " .. DATA.trade_good_get_name(good)
 			.. " to the " .. PROVINCE_NAME(province)
 			.. " market for " .. ut.to_fixed_point2(income)
@@ -1059,13 +1052,13 @@ function EconomicEffects.party_sell_good(party,good,amount)
 end
 
 ---attempts to buy use case from market for parties
----@param party warband_id
+---@param party estate_id
 ---@param use use_case_id
 ---@param amount number
 function EconomicEffects.party_buy_use(party, use, amount)
-	local leader = warband_utils.active_leader(party)
-	local province = PROVINCE(leader)
-	local savings = DATA.warband_get_treasury(party)
+	local leader = party_utils.active_leader(party)
+	local province = POP_PROVINCE(leader)
+	local savings = DATA.estate_get_savings(party)
 	local can_buy, failure = et.can_buy_use(province, savings, use, amount)
 	if not can_buy then
 --		print(tabb.accumulate(failure,"Failed can_buy check",function(a,k,v)
@@ -1095,7 +1088,7 @@ function EconomicEffects.party_buy_use(party, use, amount)
 
 	local total_bought = 0
 	local spendings = 0
-	local budget = DATA.warband_get_treasury(party)
+	local budget = DATA.estate_get_savings(party)
 
 	---@type {good: trade_good_id, weight: number, price: number, available: number}[]
 	local goods = {}
@@ -1168,7 +1161,7 @@ function EconomicEffects.party_buy_use(party, use, amount)
 		DATA.province_inc_trade_wealth(province, costs)
 		---pop's savings are reduced later
 
-		DATA.warband_inc_inventory(party, values.good, consumed_amount)
+		DATA.estate_inc_inventory(party, values.good, consumed_amount)
 		EconomicEffects.change_local_stockpile(province, values.good, -consumed_amount)
 
 		local trade_volume =
@@ -1197,11 +1190,11 @@ function EconomicEffects.party_buy_use(party, use, amount)
 		)
 	end
 
-	EconomicEffects.add_party_savings(party, -math.min(spendings, DATA.warband_get_treasury(party)), ECONOMY_REASON.TRADE)
+	EconomicEffects.add_party_savings(party, -math.min(spendings, DATA.estate_get_treasury(party)), ECONOMY_REASON.TRADE)
 
 	if WORLD:does_player_see_province_news(province) then
 		WORLD:emit_notification(
-			WARBAND_NAME(party)
+			ESTATE_NAME(party)
 			.. " bought " .. ut.to_fixed_point2(amount)	.. " " .. DATA.use_case_get_name(use)
 			.. " from the " .. PROVINCE_NAME(province)
 			.. " market for " .. ut.to_fixed_point2(spendings)
@@ -1211,12 +1204,12 @@ function EconomicEffects.party_buy_use(party, use, amount)
 end
 
 ---attempts to sell use case to market from party inventory
----@param party warband_id
+---@param party estate_id
 ---@param use use_case_id
 ---@param amount number
 function EconomicEffects.party_sell_use(party,use,amount)
-	local leader = warband_utils.active_leader(party)
-	local province = TILE_PROVINCE(WARBAND_TILE(party))
+	local leader = party_utils.active_leader(party)
+	local province = TILE_PROVINCE(ESTATE_TILE(party))
 	local trade_wealth = DATA.province_get_trade_wealth(province)
 	local use_available = ev.available_use_case_for_party(party,use)
 	if not IN_SETTLEMENT(party) or use_available <= 0 or trade_wealth <= 0 then
@@ -1256,7 +1249,7 @@ function EconomicEffects.party_sell_use(party,use,amount)
 				DATA.pop_set_price_belief_sell(leader, good, price_belief * (3 / 4) + good_price * (1 / 4))
 			end
 		end
-		local goods_available = DATA.warband_get_inventory(party, good)
+		local goods_available = DATA.estate_get_inventory(party, good)
 		if goods_available > 0 then
 			goods[#goods + 1] = { good = good, weight = weight, price = good_price, available = goods_available }
 		end
@@ -1312,7 +1305,7 @@ function EconomicEffects.party_sell_use(party,use,amount)
 		DATA.province_inc_trade_wealth(province, -income)
 		---pop's savings are reduced later
 
-		DATA.warband_inc_inventory(party, values.good, -consumed_amount)
+		DATA.estate_inc_inventory(party, values.good, -consumed_amount)
 		EconomicEffects.change_local_stockpile(province, values.good, consumed_amount)
 
 		local trade_volume =
@@ -1347,7 +1340,7 @@ function EconomicEffects.party_sell_use(party,use,amount)
 
 	if WORLD:does_player_see_province_news(province) then
 		WORLD:emit_notification(
-			WARBAND_NAME(party)
+			ESTATE_NAME(party)
 			.. " sold " .. ut.to_fixed_point2(amount)	.. " " .. DATA.use_case_get_name(use)
 			.. " to the " .. PROVINCE_NAME(province)
 			.. " market for " .. ut.to_fixed_point2(total_income)
@@ -1492,7 +1485,7 @@ function EconomicEffects.sell(character, good, amount)
 
 	-- can_sell validates province
 	---@type province_id
-	local province = PROVINCE(character)
+	local province = POP_PROVINCE(character)
 	local price = ev.get_pessimistic_local_price(province, good, amount, true)
 
 	local memory = DATA.pop_get_price_belief_sell(character, good)
@@ -1610,15 +1603,15 @@ function EconomicEffects.gain_popularity(character, realm, amount)
 end
 
 ---comment
----@param warband Warband
+---@param estate estate_id
 ---@param character Character
 ---@param amount number
-function EconomicEffects.gift_to_warband(warband, character, amount)
-	assert(warband ~= INVALID_ID)
+function EconomicEffects.gift_to_estate(estate, character, amount)
+	assert(estate ~= INVALID_ID)
 	assert(character ~= INVALID_ID)
 
 	EconomicEffects.add_pop_savings(character, -amount, ECONOMY_REASON.WARBAND)
-	EconomicEffects.add_party_savings(warband,  amount, ECONOMY_REASON.DONATION)
+	EconomicEffects.add_party_savings(estate,  amount, ECONOMY_REASON.DONATION)
 end
 
 ---comment
@@ -1667,8 +1660,9 @@ function EconomicEffects.collect_tax(character)
 		end
 	end
 
-	DATA.for_each_pop_location_from_location(LOCAL_PROVINCE(character), function (item)
-		local pop = DATA.pop_location_get_pop(item)
+	DATA.for_each_estate_unit(function (item)
+		local pop = DATA.estate_unit_get_pop(item)
+		if POP_PROVINCE(character) ~= POP_PROVINCE(pop) then return end
 		local savings = DATA.pop_get_savings(pop)
 		if savings > 0 then
 			total_tax = total_tax + savings * tax_collection_ability

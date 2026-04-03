@@ -49,12 +49,12 @@ local function construction_in_province(province, funds, excess, owner, overseer
 	local min_time = math.huge
 
 	DATA.for_each_building_type(function (building_type)
-		if DATA.province_get_buildable_buildings(province, building_type) == 0 then
+		if DATA.estate_get_buildable_buildings(estate, building_type) == 0 then
 			return
 		end
 
 		local predicted_profit = eco_values.projected_income_building_type(
-			province,
+			estate,
 			building_type,
 			DATA.pop_get_race(random_pop),
 			DATA.pop_get_female(random_pop)
@@ -102,7 +102,7 @@ local function construction_in_province(province, funds, excess, owner, overseer
 	local sum_of_exponents = 0
 	DATA.for_each_building_type(function (building_type)
 		-- print(building_type)
-		if DATA.province_get_buildable_buildings(province, building_type) == 0 then
+		if DATA.estate_get_buildable_buildings(estate, building_type) == 0 then
 			return
 		end
 		-- print("potential yes")
@@ -194,7 +194,7 @@ local function construction_in_province(province, funds, excess, owner, overseer
 
 			-- We can build! But only build if we have enough excess money to pay for the upkeep...
 			if excess >= DATA.building_type_get_upkeep(to_build) then
-				local building = economy_effects.construct_building(to_build, province, owner)
+				local building = economy_effects.construct_building(to_build, estate, owner)
 				DATA.estate_inc_savings(BUILDING_ESTATE(building), construction_cost * 0.5)
 				funds = math.max(0, funds - construction_cost)
 			end
@@ -231,8 +231,9 @@ function co.run(realm)
 
 		-- local characters want to build too!
 		-- select random character:
-		local builder_location = tabb.random_select_from_array(DATA.filter_array_character_location_from_location(province, function (item)
+		local builder_location = tabb.random_select_from_array(DATA.filter_character_location(function (item)
 			local candidate = DATA.character_location_get_character(item)
+			if POP_PROVINCE(candidate) ~= province then return false end
 			if ai.construction_funds(candidate) > 150 then
 				return true
 			end

@@ -38,7 +38,7 @@ function d.load()
 	make_use_case("tannin", "tannins", "powder.png", 1, 0.72, 0.41, 0.22)
 	-- NEED.TOOLS
 	CONTAINERS_USE_CASE = make_use_case("containers", "containers", "amphora.png", 0.05, 0.34, 0.212, 1)
-	TOOLS_LIKE_USE_CASE = make_use_case("tools-like", "tools", "stone-axe.png", 0.1, 0.162, 0.141, 0.422)
+	TOOLS_LIKE_USE_CASE = make_use_case("tools-like", "tools-like", "stone-axe.png", 0.1, 0.162, 0.141, 0.422)
 	make_use_case("tools", "tools", "stone-axe.png", 0.05, 0.162, 0.141, 0.422)
 	make_use_case("tools-advanced", "tools", "stone-axe.png", 0.01, 0.162, 0.141, 0.422)
 	-- NEED.FURNITURE

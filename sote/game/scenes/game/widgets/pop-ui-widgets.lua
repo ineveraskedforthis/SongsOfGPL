@@ -76,7 +76,7 @@ function pui.render_forage_time(rect,pop_id)
 		tooltip = tooltip .. " but " .. ut.to_fixed_point2((1-free_time)*100) .. "% of its time is spent learning."
 	elseif warband_time > 0 then
 		tooltip = tooltip .. " but " .. ut.to_fixed_point2(warband_time*100)
-			.. "% of its time is used by " .. WARBAND_NAME(UNIT_OF(pop_id)) .. "."
+			.. "% of its time is used by " .. ESTATE_NAME(UNIT_OF(pop_id)) .. "."
 	else
 		tooltip = tooltip .. "."
 	end
@@ -93,7 +93,7 @@ function pui.render_warband_time(rect,pop_id)
 		local _, warband_time, _, _ = POP_TIME(pop_id)
 		local status = DATA.warband_get_current_status(party_id)
 		local tooltip = pop_name .. " has spent " .. ut.to_fixed_point2(warband_time*100)
-			.. "% of " .. HISHER(pop_id) .. " time with " .. WARBAND_NAME(party_id) .. " this month. "
+			.. "% of " .. HISHER(pop_id) .. " time with " .. ESTATE_NAME(party_id) .. " this month. "
 			.. strings.title(HESHE(pop_id)) ..  " is currently " .. DATA.warband_status_get_action_string(status)
 			.. ", increasing this month's party time towards " .. ut.to_fixed_point2(DATA.warband_status_get_time_used(status)*100) .. "%."
 		ut.generic_number_field("guards.png", warband_time, rect, tooltip, ut.NUMBER_MODE.PERCENTAGE, ut.NAME_MODE.ICON,true)
@@ -129,7 +129,7 @@ function pui.occupation_name(pop_id)
 	local teen_age = DATA.race_get_teen_age(DATA.pop_get_race(pop_id))
 	local occupation_id = DATA.get_employment_from_worker(pop_id)
     local employer = DATA.employment_get_building(occupation_id)
-	local unit_type_id = pop_utils.get_unit_type_of(pop_id)
+	local unit_type_id = UNIT_TYPE_OF(pop_id)
 	if age < teen_age then
 		return pop_utils.get_age_string(pop_id)
 	elseif unit_type_id ~= INVALID_ID then
@@ -222,7 +222,7 @@ end
 ---@param vertical_algin VerticalAlignMode
 ---@param tooltip string?
 function pui.render_unit_text(rect, pop_id, horizontal_align, vertical_algin, tooltip)
-	local unit_type_id = pop_utils.get_unit_type_of(pop_id)
+	local unit_type_id = UNIT_TYPE_OF(pop_id)
 	if unit_type_id ~= INVALID_ID then
 		ui.text(
 			strings.title(DATA.unit_type_get_name(unit_type_id)),
@@ -267,7 +267,7 @@ end
 ---@param pop_id pop_id
 function pui.render_warband_income(rect, pop_id)
 	if UNIT_OF(pop_id) ~= INVALID_ID then
-		local unit_type_id = pop_utils.get_unit_type_of(pop_id)
+		local unit_type_id = UNIT_TYPE_OF(pop_id)
 		local wage, unit = 0, "noncombatant"
 		if unit_type_id ~= INVALID_ID then
 			wage = DATA.unit_type_get_base_cost(UNIT_TYPE_OF(pop_id))
@@ -297,37 +297,39 @@ function pui.occupation_tooltip(pop_id)
 	local occupation = DATA.get_employment_from_worker(pop_id)
     local employer_id = DATA.employment_get_building(occupation)
 	local party_id = UNIT_OF(pop_id)
+	local unit_type_id = UNIT_TYPE_OF(pop_id)
 
 	-- first spend party time, then attempt to forage, finally use remaining time to work
-	local free_time,warband_time,forage_time,work_time  = POP_TIME(pop_id)
+	local free_time,travel_time,forage_time,work_time  = POP_TIME(pop_id)
 
+	-- all pops potentially forage
 	local tooltip = "Foraging\t" .. ut.to_fixed_point2(forage_time*100)
 		.."%\t(" .. ut.to_fixed_point2(DATA.pop_get_forage_ratio(pop_id)*100) .. "%)"
 
-	if age < teen_age then
-		tooltip = strings.title(pop_utils.get_age_string(pop_id))
-			.. "\t(" .. ut.to_fixed_point2(free_time*100) .. "%)"
-			.. "\n\tLearning\t" .. ut.to_fixed_point2((1-free_time)*100) .. "%"
+	-- all pops are part of an estate and can possibly have some time taken
+	if party_id ~= INVALID_ID then
+		local unit_name = DATA.unit_type_get_name(unit_type_id)
+		local estate_status = DATA.estate_get_current_status(party_id)
+		tooltip = ESTATE_NAME(party_id) .. " " .. strings.title(unit_name)
+			.. "\t" .. ut.to_fixed_point2(travel_time*100) .. "% (" .. DATA.estate_status_get_name(estate_status) .. ")"
 			.. "\n\t" .. tooltip
-	else
+	end
+	-- children and babies cant work and spend some time learning
+	if age < teen_age then
+		tooltip =  strings.title(pop_utils.get_age_string(pop_id))
+			.. "\n\tLearning\t" .. ut.to_fixed_point2((1-free_time)*100) .. "%"
+			.. "\t(" .. ut.to_fixed_point2(free_time*100) .. "%)"
+			.. "\n\t" .. tooltip
+	else -- check for employment
 		if employer_id ~= INVALID_ID then
 			local employer_name = DATA.building_type_get_name(DATA.building_get_current_type(employer_id))
-			tooltip = strings.title(employer_name) .. "\t" .. ut.to_fixed_point2(work_time*100) .. "%"
-				.. "\n\t" .. tooltip
+			tooltip = tooltip .. "\n\t" .. strings.title(employer_name) .. "\t" .. ut.to_fixed_point2(work_time*100) .. "%"
 		end
-		if party_id ~= INVALID_ID then
-			local unit_type_id = pop_utils.get_unit_type_of(pop_id)
-			local unit_name = DATA.unit_type_get_name(unit_type_id)
-			tooltip = WARBAND_NAME(party_id)
-				.. "\t" .. ut.to_fixed_point2(warband_time*100) .. "%"
-				.. "\n\t" .. tooltip
-		end
-		if party_id ~= INVALID_ID then
-			local unit_type_id = pop_utils.get_unit_type_of(pop_id)
+		-- choose most appropriate title 
+		if unit_type_id ~= UNIT_TYPE.WARRIOR then
 			local unit_name = DATA.unit_type_get_name(unit_type_id)
 			tooltip = strings.title(unit_name) .. "\t(" .. ut.to_fixed_point2(free_time*100) .. "%)"
-				.. "\n \t" .. tooltip
-
+				.. "\n\t" .. tooltip
 		elseif employer_id ~= INVALID_ID then
 			local job_id = DATA.employment_get_job(occupation)
 			tooltip = strings.title(DATA.job_get_name(job_id)) .. "\t(" .. ut.to_fixed_point2(free_time*100) .. "%)"
@@ -352,12 +354,12 @@ function pui.render_occupation_icon(rect, pop_id, tooltip)
 	local teen_age = DATA.race_get_teen_age(DATA.pop_get_race(pop_id))
 	local occupation = DATA.get_employment_from_worker(pop_id)
     local employer_id = DATA.employment_get_building(occupation)
-	local unit_of = UNIT_OF(pop_id)
+	local unit_of = UNIT_TYPE_OF(pop_id)
 
 	if age < teen_age then
 		ut.render_icon(center_square, "ages.png", 0.8, 0.8, 0.8, 1, true)
 	else
-		if unit_of ~= INVALID_ID then
+		if unit_of == UNIT_TYPE.WARRIOR then
 			pui.render_unit_icon(center_square, pop_id)
 		elseif employer_id ~= INVALID_ID then
 			local job_id = DATA.employment_get_job(occupation)
@@ -524,7 +526,7 @@ end
 ---@return string
 function pui.pop_tooltip(pop_id)
 	if pop_id ~= INVALID_ID then
-		local unit_type_id = pop_utils.get_unit_type_of(pop_id)
+		local unit_type_id = UNIT_TYPE_OF(pop_id)
 		local unit_type = unit_type_id ~= INVALID_ID and DATA.unit_type_get_name(unit_type_id) or strings.title(rank_name(pop_id))
 		local tooltip = NAME(pop_id)
 			.. "\n " .. AGE_YEARS(pop_id) .. " y.o." .. (FEMALE(pop_id) and " female " or " male ")
@@ -796,21 +798,21 @@ end
 
 function pui.render_location_buttons(game,rect,pop_id)
 	local name = NAME(pop_id)
-	local province_id = LOCAL_PROVINCE(pop_id)
+	local province_id = POP_PROVINCE(pop_id)
 	local realm_id = PROVINCE_REALM(province_id)
 	local icon_size = math.max(ut.BASE_HEIGHT,rect.height)
 	local icon_rect = rect:subrect(-rect.height*3,0,icon_size,icon_size,"right","up")
 	local info_rect = rect:subrect(0,0,icon_size*3,rect.height,"right","up")
 	local tile_id
 	-- in a settlement that has a realm
-	if PROVINCE(pop_id) == province_id then
+	if POP_PROVINCE(pop_id) == province_id then
 		tile_id = DATA.province_get_center(province_id)
 		ib.icon_button_to_realm(game,realm_id,icon_rect,
 			name .. " is currently in the capitol of " .. (realm_id ~= INVALID_ID and DATA.realm_get_name(realm_id) or " unclaimed wildlands."))
 		pui.render_realm_popularity(info_rect,pop_id,realm_id)
 	else -- has a party location and speed
 		local party_id = UNIT_OF(pop_id)
-		tile_id = WARBAND_TILE(party_id)
+		tile_id = ESTATE_TILE(party_id)
 		local biome = DATA.tile_get_biome(tile_id)
 		local biome_tooltip = name .. " is currently roaming " .. DATA.biome_get_name(biome) .. "."
 		ui.panel(icon_rect,2,true)
